@@ -23,7 +23,7 @@ def swimTunnel(filePath,expID):
 
     # First walk. Define a smaller image movement subset and crop.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob
-    totalFrames, [rx,ry,rw,rh], [mbx,mby,mbw,mbh] = getMainBox(filePath)
+    totalFrames, (rx,ry,rw,rh), (mbx,mby,mbw,mbh) = getMainBox(filePath)
 
     # Read the first frame for second video walk
     _, frame = vid.read()
@@ -51,13 +51,12 @@ def swimTunnel(filePath,expID):
         if (numFrame == 1):
             fishContoursPrev = fishContours
 
-
         # Check the previous countour shape
         skeletonBelong = True
         matchContour = cv.matchShapes(fishContours, fishContoursPrev, 3, 0.0)
         
         # Check if the fish boundary contains the fish skeleton
-        fx,fy,fw,fh = cv.boundingRect(fishContours)
+        (fx, fy, fw, fh) = cv.boundingRect(fishContours)
         for i in range(np.size(fishSkeleton,0)):
             if (not ((fx<fishSkeleton[i][0,0]<(fx+fw)) and (fy<fishSkeleton[i][0,1]<(fy+fh)))):
                 skeletonBelong = False
@@ -68,7 +67,7 @@ def swimTunnel(filePath,expID):
             # Export Results
             exportResults(exportFilePath, expID, fishSkeleton, numFrame, True)
 
-            # DO: Show results
+            # DebugOnly: Show results
             cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1)
             cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1)
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
@@ -84,7 +83,7 @@ def swimTunnel(filePath,expID):
             if (failFrames >= 10 * totalFrames /100):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
 
-            # DO: Show results
+            # DebugOnly: Show results
             cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
             cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
@@ -105,27 +104,25 @@ def swimTunnel(filePath,expID):
 
 def getMovementBox(frame):
 
-    # Dilate the pixels for a better edges detection
+    # Dilate one time the image for a better edges detection
     morphSize = 2
     element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*morphSize+1, 2*morphSize+1), (morphSize, morphSize))
     frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element)
 
     # Canny Edge-Detection
     frame = cv.Canny(frame, 100, 200)
-    cv.imshow("movementbox",frame)
-    cv.waitKey(0)
+
     # Find countours
     _, contours, _ = cv.findContours(frame, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
     # Join the contours in one
     if (np.size(contours) == 0):
-        [mx, my,mw,mh] = [0,0,0,0]
+        (mx, my, mw, mh) = (0, 0, 0, 0)
     else:
         joinedContours = contours[0]
         for i in range(1,np.size(contours,0)):
-            joinedContours = np.insert(joinedContours, np.size(joinedContours,0), contours[i])
-        print(joinedContours)
-        mx,my,mw,mh = cv.boundingRect(joinedContours)
+            joinedContours = np.concatenate((joinedContours,contours[i]),0) # faster than an insert
+        (mx, my, mw, mh) = cv.boundingRect(joinedContours)
 
     return np.array([mx, my, mw, mh], int)
 
@@ -147,13 +144,14 @@ def getMainBox(filePath):
     _, backFrame = backVid.read()
 
     # Select the region of interest
-    rx, ry, rw, rh = cv.selectROI(backFrame)
+    (rx, ry, rw, rh) = cv.selectROI(backFrame)
     cv.destroyAllWindows()
 
     # Init. main box to the union
-    mbx, mby, mbw, mbh = [-np.size(backFrame,0), -np.size(backFrame,1), 0 , 0]
+    #(mbx, mby, mbw, mbh) = (-np.size(backFrame,0), -np.size(backFrame,1), 0 , 0)
+    (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
 
-    # First walk to detec the movement domain and the total number of frames
+    # First walk to detect the movement domain and the total number of frames
     print("Detecting the movement domain...")
     while(backFrame is not None):
         
@@ -162,10 +160,17 @@ def getMainBox(filePath):
         # Step1 -- Crop the region of interest
         backFrame = backFrame[ry:(ry+rh), rx:(rx+rw)]
 
-        # Step2 -- Update of the background model and the movement box
-        preprocess(backFrame, True, False)
+        # Step2 -- Update of the background model and the movement domain
+        backFrame = preprocess(backFrame, True, False)
         backFrame = pMOG2.apply(backFrame)
-        mx, my, mw, mh = getMovementBox(backFrame)
+        
+        (mx, my, mw, mh) = getMovementBox(backFrame)
+        
+        # DebugOnly: Show the boxes union
+        drawing2 = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
+        cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh),(255, 255, 255), 1, 8, 0)
+        cv.imshow("movement box", drawing2)
+        cv.waitKey(1)
 
         # Step3 -- Join the boxes ommiting the limit ones
         if ((mw*mh > 10000) and (mw*mh < 28000)):
@@ -185,7 +190,14 @@ def getMainBox(filePath):
             else:
                 if (my+mh > mby+mbh):
                     mbh = mh + (my-mby)
-    
+
+        # DebugOnly: Show the boxes union
+        print(mbx, mby, mbw, mbh)
+        drawing = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
+        cv.rectangle(backFrame, (mbx, mby), (mbw+mbx, mby+mbh),(255, 255, 255), 1, 8, 0)
+        cv.imshow("Main box", drawing)
+        cv.waitKey(1)
+
         # Update the frame
         _, backFrame = backVid.read()
 
@@ -208,12 +220,12 @@ def preprocess(frame, blur, threshold):
         frame = cv.medianBlur(frame, 9)
 
     if (threshold):
-        # Threshold by color to a binary image
+        # Threshold by color
         frame = cv.inRange(frame, 0, 110)
 
-    # Debug Only: Show preprocess image
-    cv.imshow("PreProcess",frame)
-    cv.waitKey(1)
+    # # DebugOnly: Show preprocess image
+    # cv.imshow("PreProcess",frame)
+    # cv.waitKey(1)
 
     return frame
 
@@ -227,20 +239,20 @@ def getFishContours(frame):
 
     # Delete unnecessary blobs TODO: No absolute values!
     iFishContour = 0
-    for i in range(np.size(contours)):
+    for i in range(np.size(contours, 0)):
 
         area = cv.contourArea(contours[i], False)
 
         if (area > 5500 and area < 6500):
             iFishContour = i
     
-    # Debug Only: Draw all contours
-    drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
-    cv.drawContours(drawing, contours, iFishContour, (255, 255, 255), 2)
-    cv.imshow("Fish Contours", drawing)
-    cv.waitKey(1)
+    # # DebugOnly: Draw all contours
+    # drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
+    # cv.drawContours(drawing, contours, iFishContour, (255, 255, 255), 2)
+    # cv.imshow("Fish Contours", drawing)
+    # cv.waitKey(1)
 
-    # # Debug Only: Draw all contours
+    # # DebugOnly: Draw all contours
     # drawing2 = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
     # cv.drawContours(drawing2,contours,-1,(0,0,255),2)#-1 to print all contours
     # cv.imshow("All Contours",drawing2)
@@ -250,7 +262,7 @@ def getFishContours(frame):
 
 def getFishSkeleton(frame):
 
-    # Create the skeleton through Zhang-Suen thinning
+    # Create the skeleton through Zhang-Suen thinning 
     frame = cv.ximgproc.thinning(frame, 0)
 
     # Find the Skeleton
@@ -258,7 +270,7 @@ def getFishSkeleton(frame):
 
     # Delete unnecessary lines
     maxLen = 0
-    for i in range(np.size(contours)):
+    for i in range(np.size(contours,0)):
         length = cv.arcLength(contours[i], False)
         if (length > maxLen):
             maxLen = length
@@ -275,6 +287,7 @@ def exportResults(exportFilePath, expID, fishSkeleton, step, validFrame):
     # Open the file in writting mode
     myFile = open(exportFilePath + expID + "_" + str(step) + ".dat", "w")
 
+    # Write an ampty file if the frame is failed
     if (validFrame):
         for i in range(np.size(fishSkeleton,0)):
             myFile.write(str(fishSkeleton[i][0,0])+ " " + str(fishSkeleton[i][0,1]) +"\n")
@@ -286,8 +299,8 @@ def exportResults(exportFilePath, expID, fishSkeleton, step, validFrame):
     return 0
 
 
-# MAIN
-swimTunnel("water_tunnel.avi","ExpTEST_0")
+# DebugOnly: MAIN
+swimTunnel("./video/water_tunnel.avi","ExpTEST")
 print("DONE.")
 
 
