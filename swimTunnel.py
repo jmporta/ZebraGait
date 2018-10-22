@@ -296,9 +296,9 @@ def exportResults(exportFilePath, expID, fishSkeleton, step, validFrame):
     return 0
 
 
-# # DebugOnly: MAIN
-# swimTunnel("./video/water_tunnel.avi","ExpTEST")
-# print("DONE.")
+# DebugOnly: MAIN
+swimTunnel("./video/water_tunnel.avi","ExpTEST")
+print("DONE.")
 
 
 

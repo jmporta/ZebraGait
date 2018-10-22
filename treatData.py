@@ -12,7 +12,6 @@ def treatData(fps,expID):
     exportPath = "./export/"
     
     # Number of files
-    #nFiles = len(fnmatch.filter(os.listdir(importPath), "*.dat"))
     nFiles = len(fnmatch.filter(os.listdir(importPath), "*.npy"))
 
     # Obtain data
@@ -30,7 +29,7 @@ def treatData(fps,expID):
     #plotGraphs(ampl, beta, gamma)
 
     print("Computation DONE.")
-    
+
     return 0
 
 
@@ -47,6 +46,7 @@ def importData(filePath, expID, axisLon, nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
         A = np.load(filePath + expID + "_" + str(i+1) + ".npy")
+        
         # Data pre-treatment
         A = np.reshape(A, (np.size(A, 0), 2)) # Convert the array-points to a matrix
         A = A[np.argsort(A[:, 0])]  # sort points by x
@@ -129,22 +129,13 @@ def exportData(tailP, headP, headPe, ampl, beta, gamma, nFiles, filePath, expID)
     if not os.path.exists(filePath):
         os.makedirs(filePath)
 
-    myFile = open(filePath + expID + ".csv", "w")
-
-    columnTitleRow = "TailP, HeadP, HeadPe, Amplitude, TailAngle(beta), TailHeadAngle(Gamma)\n"
-    myFile.write(columnTitleRow)
-
-    for i in range(nFiles):
-        row = str(tailP[i]) + ", " + str(headP[i]) + ", " + str(headPe[i]) + \
-            ", " + str(ampl[i]) + ", " + str(beta[i]) + \
-            ", " + str(gamma[i]) + "\n"
-        myFile.write(row)
-
-    myFile.close()
+    dataHeader = "x_TailP, y_TailP, x_HeadP, y_HeadP, x_HeadPe, y_HeadPe, Amplitude, TailAngle(beta), TailHeadAngle(Gamma)"
+    data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0], headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
+    np.savetxt(filePath + expID + ".csv",data, delimiter=',', header=dataHeader, comments="")
 
     return 0
 
 
-# # DebugOnly: MAIN
-# treatData(1000, "ExpTEST")
-# print("DONE.")
+# DebugOnly: MAIN
+treatData(1000, "ExpTEST")
+print("DONE.")
