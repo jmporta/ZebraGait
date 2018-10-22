@@ -29,6 +29,7 @@ def swimTunnel(filePath,expID):
     _, frame = vid.read()
 
     # Second video walk to find the skeleton and its data
+    print("Extracting data...")
     while(frame is not None):
 
         numFrame += 1
@@ -98,7 +99,8 @@ def swimTunnel(filePath,expID):
     vid.release()
     cv.destroyAllWindows()
 
-    print("Failed frames: " + str(failFrames) + "/" + str(totalFrames) + "\n")
+    print("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
+    print("Extraction DONE.")
 
     return failFrames
 
@@ -166,11 +168,11 @@ def getMainBox(filePath):
         
         (mx, my, mw, mh) = getMovementBox(backFrame)
         
-        # DebugOnly: Show the boxes union
-        drawing2 = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
-        cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh),(255, 255, 255), 1, 8, 0)
-        cv.imshow("movement box", drawing2)
-        cv.waitKey(1)
+        # # DebugOnly: Show the boxes union
+        # drawing2 = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
+        # cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh),(255, 255, 255), 1, 8, 0)
+        # cv.imshow("movement box", drawing2)
+        # cv.waitKey(1)
 
         # Step3 -- Join the boxes ommiting the limit ones
         if ((mw*mh > 10000) and (mw*mh < 28000)):
@@ -191,12 +193,12 @@ def getMainBox(filePath):
                 if (my+mh > mby+mbh):
                     mbh = mh + (my-mby)
 
-        # DebugOnly: Show the boxes union
-        print(mbx, mby, mbw, mbh)
-        drawing = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
-        cv.rectangle(backFrame, (mbx, mby), (mbw+mbx, mby+mbh),(255, 255, 255), 1, 8, 0)
-        cv.imshow("Main box", drawing)
-        cv.waitKey(1)
+        # # DebugOnly: Show the boxes union
+        # print(mbx, mby, mbw, mbh)
+        # drawing = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
+        # cv.rectangle(backFrame, (mbx, mby), (mbw+mbx, mby+mbh),(255, 255, 255), 1, 8, 0)
+        # cv.imshow("Main box", drawing)
+        # cv.waitKey(1)
 
         # Update the frame
         _, backFrame = backVid.read()
@@ -283,25 +285,20 @@ def exportResults(exportFilePath, expID, fishSkeleton, step, validFrame):
     # Check if path exists, if not create it
     if not os.path.exists(exportFilePath):
         os.makedirs(exportFilePath)
-    
-    # Open the file in writting mode
-    myFile = open(exportFilePath + expID + "_" + str(step) + ".dat", "w")
 
-    # Write an ampty file if the frame is failed
+    # Save skeleton to a numpy binary array file *.npy
     if (validFrame):
-        for i in range(np.size(fishSkeleton,0)):
-            myFile.write(str(fishSkeleton[i][0,0])+ " " + str(fishSkeleton[i][0,1]) +"\n")
+        np.save(exportFilePath + expID + "_" + str(step), fishSkeleton)
     else:
-        myFile.write(" \n")
-
-    myFile.close()
+        # Write an ampty file if the frame is failed
+        np.save(exportFilePath + expID + "_" + str(step),0)
 
     return 0
 
 
-# DebugOnly: MAIN
-swimTunnel("./video/water_tunnel.avi","ExpTEST")
-print("DONE.")
+# # DebugOnly: MAIN
+# swimTunnel("./video/water_tunnel.avi","ExpTEST")
+# print("DONE.")
 
 
 

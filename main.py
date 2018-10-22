@@ -19,7 +19,7 @@ def runProcess():
         expID = txtVidId.get()
         Fps = int(txtVidFps.get())
         if ((Fps > 0) and (Fps < 1001)):
-            swimTunnel(filePath,expID)
+            swimTunnel(filePath, expID)
             treatData(Fps, expID)
         else:
             raise Exception("The fps value must be in [1,1000].")
@@ -98,7 +98,7 @@ btnPath.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
 lblVidId = tk.Label(mainFrame, text="ExperimentID:")
 lblVidId.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 
-defaultID = tk.StringVar(mainFrame, value='ExpID_0')
+defaultID = tk.StringVar(mainFrame, value="ExpID")
 txtVidId = tk.Entry(mainFrame,textvariable=defaultID)
 txtVidId.grid(column=1, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 

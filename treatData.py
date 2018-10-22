@@ -8,17 +8,20 @@ def treatData(fps,expID):
 
     # Init. data
     axisLon = 200  # length of the headP-HeadPe
+    importPath = "./data/"
+    exportPath = "./export/"
     
-    # number of files
-    nFiles = len(fnmatch.filter(os.listdir("./data"), "*.dat"))
+    # Number of files
+    #nFiles = len(fnmatch.filter(os.listdir(importPath), "*.dat"))
+    nFiles = len(fnmatch.filter(os.listdir(importPath), "*.npy"))
 
     # Obtain data
-    tailP, headP, headPe = importData(axisLon, nFiles)
+    print("Computing Data...")
+    tailP, headP, headPe = importData(importPath, expID, axisLon, nFiles)
     ampl, beta, gamma = computeData(tailP, headP, headPe, nFiles)
 
     # Export data
-    exportPath = "./export/"
-    if not os.path.isdir(exportPath): # create the folder if it does not exisist
+    if (not os.path.isdir(exportPath)): # create the folder if it does not exisist
         os.makedirs(exportPath)
 
     exportData(tailP, headP, headPe, ampl, beta, gamma,
@@ -26,27 +29,26 @@ def treatData(fps,expID):
 
     #plotGraphs(ampl, beta, gamma)
 
+    print("Computation DONE.")
+    
     return 0
 
 
-def importData(axisLon, nFiles):
+def importData(filePath, expID, axisLon, nFiles):
 
     # Init. the main arrays
-    A = np.empty((1, 2), int)
+    A = np.zeros((1, 2), int)
     tailP = np.zeros((nFiles, 2), int)
     headP = np.zeros((nFiles, 2), int)
     headPe = np.zeros((nFiles, 2), int)
 
     # Export/Extract the data from the files
-    for i in range(0, nFiles-1):
+    for i in range(nFiles):
 
-        # Open/Load/Close data file
-        myImport = "./data/SkeletonFrame" + str(i+1) + ".dat"
-        myFile = open(myImport, "r")
-        A = np.loadtxt(myFile, dtype=int, usecols=range(2))
-        myFile.close()
-
+        # Load skeleton from a numpy binary array file *.npy
+        A = np.load(filePath + expID + "_" + str(i+1) + ".npy")
         # Data pre-treatment
+        A = np.reshape(A, (np.size(A, 0), 2)) # Convert the array-points to a matrix
         A = A[np.argsort(A[:, 0])]  # sort points by x
         A = np.unique(A, axis=0)  # delete repeated points
         A[:, 1] = -A[:, 1] # convert coords. to R^2 (original ones are image matrix indicies)
@@ -127,14 +129,12 @@ def exportData(tailP, headP, headPe, ampl, beta, gamma, nFiles, filePath, expID)
     if not os.path.exists(filePath):
         os.makedirs(filePath)
 
-    myExport = filePath + expID + ".csv"
-
-    myFile = open(myExport, "w")
+    myFile = open(filePath + expID + ".csv", "w")
 
     columnTitleRow = "TailP, HeadP, HeadPe, Amplitude, TailAngle(beta), TailHeadAngle(Gamma)\n"
     myFile.write(columnTitleRow)
 
-    for i in range(0, nFiles-1):
+    for i in range(nFiles):
         row = str(tailP[i]) + ", " + str(headP[i]) + ", " + str(headPe[i]) + \
             ", " + str(ampl[i]) + ", " + str(beta[i]) + \
             ", " + str(gamma[i]) + "\n"
@@ -143,3 +143,8 @@ def exportData(tailP, headP, headPe, ampl, beta, gamma, nFiles, filePath, expID)
     myFile.close()
 
     return 0
+
+
+# # DebugOnly: MAIN
+# treatData(1000, "ExpTEST")
+# print("DONE.")
