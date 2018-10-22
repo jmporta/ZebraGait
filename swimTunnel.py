@@ -3,10 +3,11 @@ import numpy as np
 import os
 
 
-def swimTunnel(filePath,expID):
+def swimTunnel(filePath,expID,fps):
 
     # Global vars
     exportFilePath = "./data/"
+    saveFilePath = "./export/"
 
     # Open the video in a VideoCapture object
     vid = cv.VideoCapture(filePath)
@@ -24,6 +25,13 @@ def swimTunnel(filePath,expID):
     # First walk. Define a smaller image movement subset and crop.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob
     totalFrames, (rx,ry,rw,rh), (mbx,mby,mbw,mbh) = getMainBox(filePath)
+
+    # Open a save video object
+    if not os.path.exists(saveFilePath):
+        os.makedirs(saveFilePath)
+        
+    codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
+    out = cv.VideoWriter(saveFilePath + expID + ".avi", codec, fps, (mbw, mbh))
 
     # Read the first frame for second video walk
     _, frame = vid.read()
@@ -68,12 +76,16 @@ def swimTunnel(filePath,expID):
             # Export Results
             exportResults(exportFilePath, expID, fishSkeleton, numFrame, True)
 
-            # DebugOnly: Show results
+            # Save the frame in file
             cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1)
             cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1)
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
-            cv.imshow('Video', originalFrame)
-            cv.waitKey(1)
+            out.write(originalFrame)
+
+            # # DebugOnly: Show results
+            # cv.imshow('Video', originalFrame)
+            # cv.waitKey(1)
+
         else:
             failFrames += 1
 
@@ -84,12 +96,12 @@ def swimTunnel(filePath,expID):
             if (failFrames >= 10 * totalFrames /100):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
 
-            # DebugOnly: Show results
-            cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
-            cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
-            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
-            cv.imshow('Video', originalFrame)
-            cv.waitKey(0)
+            # # DebugOnly: Show results
+            # cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
+            # cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
+            # cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
+            # cv.imshow('Video', originalFrame)
+            # cv.waitKey(0)
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -297,7 +309,7 @@ def exportResults(exportFilePath, expID, fishSkeleton, step, validFrame):
 
 
 # DebugOnly: MAIN
-swimTunnel("./video/water_tunnel.avi","ExpTEST")
+swimTunnel("./video/water_tunnel.avi","ExpTEST",1000)
 print("DONE.")
 
 

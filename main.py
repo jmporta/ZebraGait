@@ -17,10 +17,10 @@ def runProcess():
     try:
         filePath = txtPath.get()
         expID = txtVidId.get()
-        Fps = int(txtVidFps.get())
-        if ((Fps > 0) and (Fps < 1001)):
-            swimTunnel(filePath, expID)
-            treatData(Fps, expID)
+        fps = int(txtVidFps.get())
+        if ((fps > 0) and (fps < 1001)):
+            swimTunnel(filePath, expID, fps)
+            treatData(fps, expID)
         else:
             raise Exception("The fps value must be in [1,1000].")
     except Exception as err:
