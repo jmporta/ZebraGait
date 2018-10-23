@@ -1,32 +1,31 @@
 import fnmatch
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 
-def treatData(fps,expID):
+def treatData(expID, fps):
 
     # Init. data
-    axisLon = 200  # length of the headP-HeadPe
-    importPath = "./data/"
+    axisLon = 50  # length of the headP-HeadPe
+    dataPath = "./data/"
     exportPath = "./export/"
-    
+
+    # Check the paths
+    if not os.path.exists(dataPath):
+        os.makedirs(dataPath)  # create the folder if it does not exisist
+    if not os.path.exists(exportPath):
+        os.makedirs(exportPath)  # create the folder if it does not exisist
+
     # Number of files
-    nFiles = len(fnmatch.filter(os.listdir(importPath), "*.npy"))
+    nFiles = len(fnmatch.filter(os.listdir(dataPath), "*.npy"))
 
     # Obtain data
     print("Computing Data...")
-    tailP, headP, headPe = importData(importPath, expID, axisLon, nFiles)
+    tailP, headP, headPe = importData(dataPath, expID, axisLon, nFiles)
     ampl, beta, gamma = computeData(tailP, headP, headPe, nFiles)
 
     # Export data
-    if (not os.path.isdir(exportPath)): # create the folder if it does not exisist
-        os.makedirs(exportPath)
-
-    exportData(tailP, headP, headPe, ampl, beta, gamma,
-               nFiles, exportPath, expID)
-
-    #plotGraphs(ampl, beta, gamma)
+    exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID)
 
     print("Computation DONE.")
 
@@ -46,12 +45,14 @@ def importData(filePath, expID, axisLon, nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
         A = np.load(filePath + expID + "_" + str(i+1) + ".npy")
-        
+
         # Data pre-treatment
-        A = np.reshape(A, (np.size(A, 0), 2)) # Convert the array-points to a matrix
+        # Convert the array-points to a matrix
+        A = np.reshape(A, (np.size(A, 0), 2))
         A = A[np.argsort(A[:, 0])]  # sort points by x
         A = np.unique(A, axis=0)  # delete repeated points
-        A[:, 1] = -A[:, 1] # convert coords. to R^2 (original ones are image matrix indicies)
+        # convert coords. to R^2 (original ones are image matrix indicies)
+        A[:, 1] = -A[:, 1]
 
         # Save data
         tailP[i, :] = A[0, :]
@@ -89,53 +90,24 @@ def computeData(tailP, headP, headPe, nFiles):
     return ampl, beta, gamma
 
 
-def plotGraphs(ampl, beta, gamma):
+def exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID):
 
-    # Plot the amplitude
-    plt.figure(1)
-    x = np.arange(0, np.size(ampl, axis=0))
-    plt.plot(x, ampl, "r", linewidth=0.5)
-    plt.plot(np.zeros(np.size(x)), 'b--', linewidth=0.5)
-    plt.suptitle("Amplitude of the tail to the head perpendicular")
-    plt.ylabel("Amplitude(px)")
-    plt.xlabel("Frame")
-    plt.show()
-
-    # Plot the Tail-Angle beta
-    plt.figure(2)
-    x = np.arange(0, np.size(beta, axis=0))
-    plt.plot(x, beta, "r", linewidth=0.5)
-    plt.plot(np.zeros(np.size(x)), 'b--', linewidth=0.5)
-    plt.suptitle("Angle between the tail and the head perpendicular (beta)")
-    plt.ylabel("Tail angle (rad)")
-    plt.xlabel("Frame")
-    plt.show()
-
-    # Plot Tail-Head angle gamma
-    x = np.arange(0, np.size(gamma, axis=0))
-    plt.figure(3)
-    plt.plot(x, gamma, "r", linewidth=0.5)
-    plt.plot(np.pi*np.ones(np.size(x)), 'b--', linewidth=0.5)
-    plt.suptitle("Angle between the tail and the head perpendicular(beta)")
-    plt.ylabel("Tail-Head angle (rad)")
-    plt.xlabel("Frame")
-    plt.show()
-
-    return 0
-
-
-def exportData(tailP, headP, headPe, ampl, beta, gamma, nFiles, filePath, expID):
-
-    if not os.path.exists(filePath):
-        os.makedirs(filePath)
-
+    # Export all the data in a cvs file
     dataHeader = "x_TailP, y_TailP, x_HeadP, y_HeadP, x_HeadPe, y_HeadPe, Amplitude, TailAngle(beta), TailHeadAngle(Gamma)"
-    data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0], headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
-    np.savetxt(filePath + expID + ".csv",data, delimiter=',', header=dataHeader, comments="")
+    data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0],
+                         headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
+    np.savetxt(exportPath + expID + ".csv", data,
+               delimiter=',', header=dataHeader, comments="")
+
+    # Export all the data in npy files
+    np.save(dataPath + expID + "_ampl", ampl)
+    np.save(dataPath + expID + "_beta", beta)
+    np.save(dataPath + expID + "_gamma", gamma)
 
     return 0
 
 
-# DebugOnly: MAIN
-treatData(1000, "ExpTEST")
-print("DONE.")
+if (__name__ == "__main__"):
+    # DebugOnly: MAIN
+    treatData(1000, "ExpTEST")
+    print("DONE.")
