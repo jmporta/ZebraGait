@@ -1,4 +1,4 @@
-import fnmatch
+import pathlib
 import os
 import numpy as np
 
@@ -6,18 +6,15 @@ import numpy as np
 def treatData(expID, fps):
 
     # Init. data
-    axisLon = 50  # length of the headP-HeadPe
-    dataPath = "./data/"
-    exportPath = "./export/"
+    axisLon = 200  # length of the headP-HeadPe
+    dataPath = "data"
+    exportPath = "export"
 
-    # Check the paths
-    if not os.path.exists(dataPath):
-        os.makedirs(dataPath)  # create the folder if it does not exisist
-    if not os.path.exists(exportPath):
-        os.makedirs(exportPath)  # create the folder if it does not exisist
+    # Clean previous data
+    cleanData(dataPath,expID)
 
     # Number of files
-    nFiles = len(fnmatch.filter(os.listdir(dataPath), "*.npy"))
+    nFiles = len(list(pathlib.Path(dataPath).glob("*.npy")))
 
     # Obtain data
     print("Computing Data...")
@@ -44,7 +41,7 @@ def importData(filePath, expID, axisLon, nFiles):
     for i in range(nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
-        A = np.load(filePath + expID + "_" + str(i+1) + ".npy")
+        A = np.load(pathlib.Path(filePath,expID + "_" + str(i+1) + ".npy"))
 
         # Data pre-treatment
         # Convert the array-points to a matrix
@@ -93,21 +90,30 @@ def computeData(tailP, headP, headPe, nFiles):
 def exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID):
 
     # Export all the data in a cvs file
-    dataHeader = "x_TailP, y_TailP, x_HeadP, y_HeadP, x_HeadPe, y_HeadPe, Amplitude, TailAngle(beta), TailHeadAngle(Gamma)"
+    dataHeader = "x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude,TailAngle(beta),TailHeadAngle(Gamma)"
     data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0],
                          headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
     np.savetxt(exportPath + expID + ".csv", data,
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files
-    np.save(dataPath + expID + "_ampl", ampl)
-    np.save(dataPath + expID + "_beta", beta)
-    np.save(dataPath + expID + "_gamma", gamma)
+    np.save(pathlib.Path(dataPath, expID + "_ampl"), ampl)
+    np.save(pathlib.Path(dataPath, expID + "_beta"), beta)
+    np.save(pathlib.Path(dataPath, expID + "_gamma"), gamma)
 
     return 0
 
 
+def cleanData(dirPath,expID):
+    if (pathlib.Path(dirPath,expID + "_ampl.npy").exists()):
+        os.remove(pathlib.Path(dirPath, expID + "_ampl.npy"))
+    if (pathlib.Path(dirPath, expID + "_beta.npy").exists()):
+        os.remove(pathlib.Path(dirPath, expID + "_beta.npy"))
+    if (pathlib.Path(dirPath, expID + "_gamma.npy").exists()):
+        os.remove(pathlib.Path(dirPath, expID + "_gamma.npy"))
+
+
 if (__name__ == "__main__"):
     # DebugOnly: MAIN
-    treatData(1000, "ExpTEST")
+    treatData("ExpID", 1000)
     print("DONE.")

@@ -1,30 +1,24 @@
 import cv2 as cv
 import numpy as np
+import pathlib
 import os
-
 
 def swimTunnel(videoPath,expID,fps):
 
     # Global vars
-    dataPath = "./data/"
-    exportPath = "./export/"
+    dataPath = "data"
+    exportPath = "export"
 
-    # Check paths
-    if not os.path.exists(dataPath):
-        os.makedirs(dataPath)  # create the folder if it does not exisist
-    if not os.path.exists(exportPath):
-        os.makedirs(exportPath)  # create the folder if it does not exisist
-
-    # Clean previous data
+    # Check/Create/Clean data paths
     cleanData(dataPath)
     cleanData(exportPath)
 
     # Open the video in a VideoCapture object
-    vid = cv.VideoCapture(videoPath)
+    vid = cv.VideoCapture(str(videoPath))
 
     # Check if the video object has opened the reference
     if (not vid.isOpened()):
-        raise Exception("Could not open the video reference: " + videoPath)
+        raise Exception("Could not open the video reference: " + str(videoPath))
 
     # Define main objects
     fishContoursPrev = np.zeros((1,2), int)
@@ -38,14 +32,14 @@ def swimTunnel(videoPath,expID,fps):
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-    out = cv.VideoWriter(exportPath + expID + ".avi", codec, fps, (mbw, mbh))
+    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID + ".avi")), codec, fps, (mbw, mbh))
 
     # Read the first frame for second video walk
     _, frame = vid.read()
 
     # Second video walk to find the skeleton and its data
     print("Extracting data...")
-    while(frame is not None):
+    while (frame is not None):
 
         numFrame += 1
 
@@ -123,6 +117,7 @@ def swimTunnel(videoPath,expID,fps):
 
     return failFrames
 
+
 def getMovementBox(frame):
 
     # Dilate one time the image for a better edges detection
@@ -147,16 +142,17 @@ def getMovementBox(frame):
 
     return np.array([mx, my, mw, mh], int)
 
+
 def getMainBox(videoPath):
 
     totalFrames = 0
 
     # Open the video in a VideoCapture object
-    backVid = cv.VideoCapture(videoPath)
+    backVid = cv.VideoCapture(str(videoPath))
 
     # Check if the video object has opened the reference
     if (not backVid.isOpened()):
-        raise Exception("Could not open the video reference: " + videoPath)
+        raise Exception("Could not open the video reference: " + str(videoPath))
 
     # Create Background Subtractor object
     pMOG2 = cv.createBackgroundSubtractorMOG2(0, 10, False)
@@ -169,7 +165,6 @@ def getMainBox(videoPath):
     cv.destroyAllWindows()
 
     # Init. main box to the union
-    #(mbx, mby, mbw, mbh) = (-np.size(backFrame,0), -np.size(backFrame,1), 0 , 0)
     (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
 
     # First walk to detect the movement domain and the total number of frames
@@ -223,7 +218,10 @@ def getMainBox(videoPath):
         _, backFrame = backVid.read()
 
     print("Movement domain defined.")
+    backVid.release()
+    
     return totalFrames, np.array([rx,ry,rw,rh], int), np.array([mbx,mby,mbw,mbh], int) # [crop region] and [main box coords]
+
 
 def preprocess(frame, blur, threshold):
 
@@ -249,6 +247,7 @@ def preprocess(frame, blur, threshold):
     # cv.waitKey(1)
 
     return frame
+
 
 def getFishContours(frame):
 
@@ -281,6 +280,7 @@ def getFishContours(frame):
 
     return contours[iFishContour]
 
+
 def getFishSkeleton(frame):
 
     # Create the skeleton through Zhang-Suen thinning 
@@ -299,21 +299,27 @@ def getFishSkeleton(frame):
 
     return contours[iFishSkeleton]
 
+
 def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 
     # Save skeleton to a numpy binary array file *.npy
     if (validFrame):
-        np.save(dataPath + expID + "_" + str(step), fishSkeleton)
+        np.save(pathlib.Path(dataPath,expID + "_" + str(step)), fishSkeleton)
     else:
         # Write an ampty file if the frame is failed
-        np.save(dataPath + expID + "_" + str(step),0)
+        np.save(pathlib.Path(dataPath,expID + "_" + str(step)),0)
 
     return 0
 
+
 def cleanData(dirPath):
-    fileList = os.listdir(dirPath)
+    # Check/Create paths
+    pathlib.Path(dirPath).mkdir(parents=True, exist_ok=True)
+    # Clean previous data if exisists
+    fileList = pathlib.Path(dirPath).glob("*.*")
     for fileName in fileList:
-        os.remove(dirPath + fileName)
+        os.remove(pathlib.Path(fileName))
+
 
 if (__name__ == "__main__"):
     # DebugOnly: MAIN
@@ -321,12 +327,12 @@ if (__name__ == "__main__"):
     from showData import showData
 
     fps = 1000
-    videoPath = "./video/water_tunnel.avi"
-    expID = "ExpTEST"
+    videoPath = pathlib.Path("./video/water_tunnel.avi")
+    expID = "ExpID"
 
     swimTunnel(videoPath, expID, fps)
-    treatData(expID, fps)
-    showData(expID, fps)
+    # treatData(expID, fps)
+    # showData(expID, fps)
     print("DONE.")
 
 

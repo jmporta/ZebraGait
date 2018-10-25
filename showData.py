@@ -1,4 +1,4 @@
-import os
+import pathlib
 import numpy as np
 import matplotlib.pyplot as pl
 
@@ -6,26 +6,27 @@ import matplotlib.pyplot as pl
 def showData(expID, fps, gui=False):
 
     # Init. data
-    dataPath = "./data/"
-    exportPath = "./export/"
+    dataPath = "data"
+    exportPath = "export"
 
     # Import data
     ampl, beta, gamma = importMesures(dataPath, expID)
 
     # Plot data
     if gui:
-        return beta, gamma, exportPath + expID + ".avi"
+        return beta, gamma, exportPath + expID + ".avi", exportPath + expID + ".csv"
     else:
         plotGraphs(ampl, beta, gamma)
 
     return 0
 
+
 def importMesures(dataPath, expID):
 
     # Import all the data in npy files
-    ampl = np.load(dataPath + expID + "_ampl.npy")
-    beta = np.load(dataPath + expID + "_beta.npy")
-    gamma = np.load(dataPath + expID + "_gamma.npy")
+    ampl = np.load(pathlib.Path(dataPath, expID + "_ampl.npy"))
+    beta = np.load(pathlib.Path(dataPath, expID + "_beta.npy"))
+    gamma = np.load(pathlib.Path(dataPath, expID + "_gamma.npy"))
 
     return ampl, beta, gamma
 
@@ -67,5 +68,5 @@ def plotGraphs(ampl, beta, gamma):
 
 
 if (__name__ == "__main__"):
-    showData("ExpTEST", 1000)
+    showData("ExpID", 1000)
     print("DONE.")
