@@ -2,13 +2,15 @@ import pathlib
 import os
 import numpy as np
 
+import config
+
 
 def treatData(expID, fps):
 
     # Init. data
-    axisLon = 200  # length of the headP-HeadPe
-    dataPath = "data"
-    exportPath = "export"
+    axisLon = config.AXIS_LON  
+    dataPath = config.DATA_PATH
+    exportPath = config.EXPORT_PATH
 
     # Clean previous data
     cleanData(dataPath,expID)
@@ -93,7 +95,7 @@ def exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, ex
     dataHeader = "x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude,TailAngle(beta),TailHeadAngle(Gamma)"
     data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0],
                          headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
-    np.savetxt(exportPath + expID + ".csv", data,
+    np.savetxt(pathlib.Path(exportPath,expID + ".csv"), data,
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files

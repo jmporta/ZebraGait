@@ -3,22 +3,25 @@ import numpy as np
 import pathlib
 import os
 
+import config
+
 def swimTunnel(videoPath,expID,fps):
 
-    # Global vars
-    dataPath = "data"
-    exportPath = "export"
+    # Init. Data
+    dataPath = config.DATA_PATH
+    exportPath = config.EXPORT_PATH
+    videoPath = str(pathlib.Path(videoPath))
 
     # Check/Create/Clean data paths
     cleanData(dataPath)
     cleanData(exportPath)
 
     # Open the video in a VideoCapture object
-    vid = cv.VideoCapture(str(videoPath))
-
+    vid = cv.VideoCapture(videoPath)
+    
     # Check if the video object has opened the reference
     if (not vid.isOpened()):
-        raise Exception("Could not open the video reference: " + str(videoPath))
+        raise Exception("Could not open the video reference: " + videoPath)
 
     # Define main objects
     fishContoursPrev = np.zeros((1,2), int)
@@ -96,6 +99,7 @@ def swimTunnel(videoPath,expID,fps):
             # Check the fail proportion
             if (failFrames >= 10 * totalFrames /100):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
+                cv.destroyAllWindows()
 
             # # DebugOnly: Show results
             # cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
@@ -148,11 +152,11 @@ def getMainBox(videoPath):
     totalFrames = 0
 
     # Open the video in a VideoCapture object
-    backVid = cv.VideoCapture(str(videoPath))
+    backVid = cv.VideoCapture(videoPath)
 
     # Check if the video object has opened the reference
     if (not backVid.isOpened()):
-        raise Exception("Could not open the video reference: " + str(videoPath))
+        raise Exception("Could not open the video reference: " + videoPath)
 
     # Create Background Subtractor object
     pMOG2 = cv.createBackgroundSubtractorMOG2(0, 10, False)
@@ -327,7 +331,8 @@ if (__name__ == "__main__"):
     from showData import showData
 
     fps = 1000
-    videoPath = pathlib.Path("./video/water_tunnel.avi")
+    #videoPath = "./video/water_tunnel.avi"
+    videoPath = "/home/avalls/Downloads/Water_tunnel.avi"
     expID = "ExpID"
 
     swimTunnel(videoPath, expID, fps)

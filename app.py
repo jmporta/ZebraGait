@@ -1,10 +1,11 @@
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as pl
+import pathlib
 
-import tkinter as tk
 import csv
 from threading import Thread
+import tkinter as tk
 from tkinter import filedialog, ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import PIL.Image
@@ -23,14 +24,17 @@ class mainWindow:
 
         # WINDOW PROPERTIES
 
+        defaultVid = "./video/water_tunnel.avi"
+        defaultFrames = "1000"
+
         # Main window
         self.master=master
         self.master.title("Swim Tunnel")
         master.resizable(width=False, height=False)
 
         # Icon
-        self.img = tk.PhotoImage(file='gar-fish.png')
-        self.master.tk.call('wm', 'iconphoto', master._w, self.img)
+        self.img = tk.PhotoImage(file=pathlib.Path("./icons/gar-fish.png"))
+        self.master.tk.call("wm", "iconphoto", master._w, self.img)
 
         # FIELDS FRAME
 
@@ -42,7 +46,7 @@ class mainWindow:
         self.lblPath =  tk.Label(self.mainFrame, text="Video path:")
         self.lblPath.grid(column=0, row=0, sticky=tk.W, padx=10, pady=10)
 
-        self.defaultPath = tk.StringVar(self.mainFrame, value='./video/water_tunnel.avi')
+        self.defaultPath = tk.StringVar(self.mainFrame, value=defaultVid)
         self.txtPath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
         self.txtPath.grid(column=1, row=0, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
@@ -61,7 +65,7 @@ class mainWindow:
         self.lblVidFps =  tk.Label(self.mainFrame, text="Video Fps:")
         self.lblVidFps.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 
-        self.defaultFps = tk.StringVar(self.mainFrame, value='1000')
+        self.defaultFps = tk.StringVar(self.mainFrame, value=defaultFrames)
         self.txtVidFps =  tk.Entry(self.mainFrame, width=5, textvariable=self.defaultFps)
         self.txtVidFps.grid(column=3, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
@@ -109,8 +113,7 @@ class mainWindow:
         except Exception as err:
             tk.messagebox.showerror("Error", err)
         else:
-            tk.messagebox.showinfo(
-                "Info", "The video has been processed. Check the results in './export' folder.")
+            tk.messagebox.showinfo("Info", "The video has been processed. Check the results in './export' folder.")
 
     def showResults(self):
         # It shows the data in the "./export" folder.
@@ -128,7 +131,8 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        filePath = tk.filedialog.askopenfilename(initialdir="/home/", title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
+        iniPath = "/home/"
+        filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         self.txtPath.delete(0, tk.END)
         self.txtPath.insert(0, filePath)
 
@@ -163,6 +167,7 @@ class showWindow:
     def __init__(self, master, beta, gamma, videoPathR, csvPathR):
 
         # WINDOW PROPERTIES
+        
 
         # Main window
         self.master = master
@@ -176,7 +181,7 @@ class showWindow:
 
         # Open the video object
         self.videoPathR = videoPathR
-        self.vid = cv.VideoCapture(self.videoPathR)
+        self.vid = cv.VideoCapture(str(self.videoPathR))
         
         if (not self.vid.isOpened()):
             raise Exception("Could not open the video reference: " + videoPathR)

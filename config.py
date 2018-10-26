@@ -1,12 +1,8 @@
-from pathlib import Path
+# Global Variables
+
+DATA_PATH = "./data/" # Path to save the npy array files
+EXPORT_PATH = "./export/" # Path to save the resultant video and the csv file
+AXIS_LON = 150  # length of the headP-HeadPe
 
 
-DATA_PATH = "data"
-EXPORT_PATH = "export"
-AXIS_LON = 50  # length of the headP-HeadPe
-
-FILE_NAME = "bon_dia"
-EXTENSION = ".avi"
-
-print(Path(DATA_PATH, FILE_NAME + EXTENSION))
 

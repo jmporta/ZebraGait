@@ -2,19 +2,20 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as pl
 
+import config
 
 def showData(expID, fps, gui=False):
 
     # Init. data
-    dataPath = "data"
-    exportPath = "export"
+    dataPath = config.DATA_PATH
+    exportPath = config.EXPORT_PATH
 
     # Import data
     ampl, beta, gamma = importMesures(dataPath, expID)
 
     # Plot data
     if gui:
-        return beta, gamma, exportPath + expID + ".avi", exportPath + expID + ".csv"
+        return beta, gamma, pathlib.Path(exportPath, expID + ".avi"), pathlib.Path(exportPath,expID + ".csv")
     else:
         plotGraphs(ampl, beta, gamma)
 
