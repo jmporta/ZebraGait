@@ -2,6 +2,7 @@
 video/
 export/
 data/
+logs/
 
 *.dat
 *.npy

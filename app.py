@@ -11,8 +11,8 @@ import PIL.ImageTk
 import numpy as np
 import cv2 as cv
 
-# Import matplotlib prepared to threading/embedding
-matplotlib.use("Agg")
+# Import matplotlib Agg buffer prepared to threading/embedding
+matplotlib.use("Agg") 
 import matplotlib.pyplot as pl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
