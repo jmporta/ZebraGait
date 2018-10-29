@@ -4,14 +4,19 @@ import csv
 from threading import Thread
 import tkinter as tk
 from tkinter import filedialog, ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import matplotlib
 import PIL.Image
 import PIL.ImageTk
 
 import numpy as np
 import cv2 as cv
-import matplotlib.pyplot as pl
 
+# Import matplotlib prepared to threading/embedding
+matplotlib.use("Agg")
+import matplotlib.pyplot as pl
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
+# Import own libs
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
@@ -119,7 +124,7 @@ class mainWindow:
             logging.error(err)
         else:
             tk.messagebox.showinfo("Info", "The video has been processed. Check the results in './export' folder.")
-            logging.info("The video has been processed. Check the results in './export' folder.")
+            logging.info("The video has been processed.")
 
     def showResults(self):
         # It shows the data in the "./export" folder.
@@ -264,6 +269,8 @@ if (__name__ == "__main__"):
         level=logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s"
     )
+
+    matplotlib.use("Agg")
 
     # Run gui and wait
     mainWin = tk.Tk()
