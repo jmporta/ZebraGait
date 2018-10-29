@@ -1,9 +1,12 @@
-import cv2 as cv
-import numpy as np
+import logging
 import pathlib
 import os
 
+import cv2 as cv
+import numpy as np
+
 import config
+
 
 def swimTunnel(videoPath,expID,fps):
 
@@ -41,9 +44,9 @@ def swimTunnel(videoPath,expID,fps):
     _, frame = vid.read()
 
     # Second video walk to find the skeleton and its data
-    print("Extracting data...")
-    while (frame is not None):
+    logging.info("Extracting data...")
 
+    while (frame is not None):
         numFrame += 1
 
         # Step1 -- Crop the region of interest
@@ -99,7 +102,6 @@ def swimTunnel(videoPath,expID,fps):
             # Check the fail proportion
             if (failFrames >= 10 * totalFrames /100):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
-                cv.destroyAllWindows()
 
             # # DebugOnly: Show results
             # cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
@@ -116,8 +118,8 @@ def swimTunnel(videoPath,expID,fps):
     vid.release()
     cv.destroyAllWindows()
 
-    print("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
-    print("Extraction DONE.")
+    logging.info("Extraction DONE.")
+    logging.info("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
 
     return failFrames
 
@@ -165,14 +167,14 @@ def getMainBox(videoPath):
     _, backFrame = backVid.read()
 
     # Select the region of interest
-    (rx, ry, rw, rh) = cv.selectROI(backFrame)
+    (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
     cv.destroyAllWindows()
 
     # Init. main box to the union
     (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
 
     # First walk to detect the movement domain and the total number of frames
-    print("Detecting the movement domain...")
+    logging.info("Detecting the movement domain...")
     while(backFrame is not None):
         
         totalFrames += 1
@@ -221,7 +223,7 @@ def getMainBox(videoPath):
         # Update the frame
         _, backFrame = backVid.read()
 
-    print("Movement domain defined.")
+    logging.info("Movement domain defined.")
     backVid.release()
     
     return totalFrames, np.array([rx,ry,rw,rh], int), np.array([mbx,mby,mbw,mbh], int) # [crop region] and [main box coords]
@@ -326,19 +328,21 @@ def cleanData(dirPath):
 
 
 if (__name__ == "__main__"):
-    # DebugOnly: MAIN
-    from treatData import treatData
-    from showData import showData
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s"
+    )
 
     fps = 1000
-    #videoPath = "./video/water_tunnel.avi"
-    videoPath = "/home/avalls/Downloads/Water_tunnel.avi"
+    videoPath = "./video/water_tunnel.avi"
+    #videoPath = "/home/avalls/Downloads/Water_tunnel.avi"
     expID = "ExpID"
 
-    swimTunnel(videoPath, expID, fps)
-    # treatData(expID, fps)
-    # showData(expID, fps)
-    print("DONE.")
-
-
-
+    try:
+        swimTunnel(videoPath, expID, fps)
+    except Exception as err:
+        logging.error(err)
+    
+    
+    logging.info("DONE.")

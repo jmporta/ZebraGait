@@ -1,8 +1,5 @@
-import numpy as np
-import cv2 as cv
-import matplotlib.pyplot as pl
+import logging
 import pathlib
-
 import csv
 from threading import Thread
 import tkinter as tk
@@ -11,9 +8,15 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import PIL.Image
 import PIL.ImageTk
 
+import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as pl
+
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
+
+import config
 
 
 class mainWindow:
@@ -106,14 +109,17 @@ class mainWindow:
             expID = self.txtVidId.get()
             fps = int(self.txtVidFps.get())
             if ((fps > 0) and (fps < 1001)):
+                # Run computations
                 swimTunnel(videoPath, expID, fps)
                 treatData(expID, fps)
             else:
                 raise Exception("The fps value must be in [1,1000].")
         except Exception as err:
             tk.messagebox.showerror("Error", err)
+            logging.error(err)
         else:
             tk.messagebox.showinfo("Info", "The video has been processed. Check the results in './export' folder.")
+            logging.info("The video has been processed. Check the results in './export' folder.")
 
     def showResults(self):
         # It shows the data in the "./export" folder.
@@ -127,6 +133,7 @@ class mainWindow:
             showWindow(showWin, beta, gamma, videoPathR, csvPathR)
         except Exception as err:
             tk.messagebox.showerror("Error", err)
+            logging.error(err)
 
     # Click functions
 
@@ -142,7 +149,7 @@ class mainWindow:
     def clickShow(self):
         self.run_thread("show", self.showResults)
 
-    # Threading functions to run the progressbar
+    # Threading functions
 
     def run_thread(self, name, func):
         Thread(target=self.run_function, args=(name, func)).start()
@@ -168,14 +175,13 @@ class showWindow:
 
         # WINDOW PROPERTIES
         
-
         # Main window
         self.master = master
         self.master.title("Plots and data")
         self.master.resizable(width=False, height=False)
         # Icon
-        self.img = tk.PhotoImage(file='gar-fish.png')
-        self.master.tk.call('wm', 'iconphoto', self.master._w, self.img)
+        self.img = tk.PhotoImage(file=pathlib.Path("./icons/gar-fish.png"))
+        self.master.tk.call("wm", "iconphoto", self.master._w, self.img)
 
         # VID
 
@@ -248,9 +254,19 @@ class showWindow:
         self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame))
         self.canvasVid.itemconfig(self.canvasVidArea,image=self.photo)
 
-
 if (__name__ == "__main__"):
+
+    # Check/Create paths
+    pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(
+        filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
+        level=logging.INFO,
+        format="%(asctime)s: %(levelname)s: %(message)s"
+    )
+
     # Run gui and wait
     mainWin = tk.Tk()
     mainWindow(mainWin)
     mainWin.mainloop()
+    

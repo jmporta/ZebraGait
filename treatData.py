@@ -1,5 +1,7 @@
+import logging
 import pathlib
 import os
+
 import numpy as np
 
 import config
@@ -19,14 +21,14 @@ def treatData(expID, fps):
     nFiles = len(list(pathlib.Path(dataPath).glob("*.npy")))
 
     # Obtain data
-    print("Computing Data...")
+    logging.info("Computing Data...")
     tailP, headP, headPe = importData(dataPath, expID, axisLon, nFiles)
     ampl, beta, gamma = computeData(tailP, headP, headPe, nFiles)
 
     # Export data
     exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID)
 
-    print("Computation DONE.")
+    logging.info("Computation DONE.")
 
     return 0
 
@@ -95,7 +97,7 @@ def exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, ex
     dataHeader = "x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude,TailAngle(beta),TailHeadAngle(Gamma)"
     data = np.transpose([tailP[:, 0], tailP[:, 1], headP[:, 0],
                          headP[:, 1], headPe[:, 0], headPe[:, 1], ampl, beta, gamma])
-    np.savetxt(pathlib.Path(exportPath,expID + ".csv"), data,
+    np.savetxt(pathlib.Path(exportPath,expID + ".csv"), data, fmt="%10.5f",
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files
@@ -116,6 +118,18 @@ def cleanData(dirPath,expID):
 
 
 if (__name__ == "__main__"):
-    # DebugOnly: MAIN
-    treatData("ExpID", 1000)
-    print("DONE.")
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s"
+    )
+
+    expID = "ExpID"
+    fps = 1000
+
+    try:
+        treatData(expID, fps)
+    except Exception as err:
+        logging.error(err)
+    
+    logging.info("DONE.")
