@@ -1,17 +1,19 @@
+# General libs
 import logging
 import pathlib
 import csv
 from threading import Thread
 import tkinter as tk
 from tkinter import filedialog, ttk
-import matplotlib
 import PIL.Image
 import PIL.ImageTk
 
+# Numerical libs
 import numpy as np
 import cv2 as cv
 
-# Import matplotlib Agg buffer prepared to threading/embedding
+# Import matplotlib Agg buffer prepared to threading/embedding on tkinter
+import matplotlib
 matplotlib.use("Agg") 
 import matplotlib.pyplot as pl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -52,7 +54,7 @@ class mainWindow:
 
         # Video open path
         self.lblPath =  tk.Label(self.mainFrame, text="Video path:")
-        self.lblPath.grid(column=0, row=0, sticky=tk.W, padx=10, pady=10)
+        self.lblPath.grid(column=0, row=0, sticky=tk.W, padx=10, pady=5)
 
         self.defaultPath = tk.StringVar(self.mainFrame, value=defaultVid)
         self.txtPath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
@@ -63,7 +65,7 @@ class mainWindow:
 
         # Export string name
         self.lblVidId =  tk.Label(self.mainFrame, text="ExperimentID:")
-        self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+        self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=10, pady=5)
 
         self.defaultID = tk.StringVar(self.mainFrame, value="ExpID")
         self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID)
@@ -87,17 +89,21 @@ class mainWindow:
         self.progressbar = ttk.Progressbar(self.btnFrame, mode="indeterminate")
         self.progressbar.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
 
-        # Spacer
-        self.spacer =  tk.Label(self.btnFrame, text=" ")
-        self.spacer.grid(column=1, row=0, sticky=tk.W, padx=110, pady=5)
+        # Status label
+        self.lblStatus = tk.Label(self.btnFrame, text="Ready", width=28, anchor=tk.W)
+        self.lblStatus.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
+
+        # # Spacer
+        # self.spacer = tk.Label(self.btnFrame, text=" ", width=20)
+        # self.spacer.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
 
         # Run button
         self.btnRun =  tk.Button(self.btnFrame, text="Run", width=5, command=self.clickRun)
-        self.btnRun.grid(column=3, row=0, sticky=tk.E, padx=5, pady=5)
+        self.btnRun.grid(column=4, row=0, sticky=tk.E, padx=5, pady=5)
 
         # Show button.
         self.btnShow =  tk.Button(self.btnFrame, text="Show", width=5, command=self.clickShow)
-        self.btnShow.grid(column=2, row=0, sticky=tk.E, padx=5, pady=5)
+        self.btnShow.grid(column=3, row=0, sticky=tk.E, padx=5, pady=5)
 
         # List of buttons to threading
         self.buttons = [self.btnRun, self.btnShow, self.btnPath]
@@ -115,16 +121,20 @@ class mainWindow:
             fps = int(self.txtVidFps.get())
             if ((fps > 0) and (fps < 1001)):
                 # Run computations
+                self.lblStatus.config(text="Processing the video...")
                 swimTunnel(videoPath, expID, fps)
+                self.lblStatus.config(text="Computing the data...")
                 treatData(expID, fps)
             else:
                 raise Exception("The fps value must be in [1,1000].")
         except Exception as err:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
+            self.lblStatus.config(text="Ready")
         else:
             tk.messagebox.showinfo("Info", "The video has been processed. Check the results in './export' folder.")
             logging.info("The video has been processed.")
+            self.lblStatus.config(text="Ready")
 
     def showResults(self):
         # It shows the data in the "./export" folder.
@@ -264,13 +274,12 @@ if (__name__ == "__main__"):
     # Check/Create paths
     pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
 
+    # Logs configuration
     logging.basicConfig(
         filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
         level=logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s"
     )
-
-    matplotlib.use("Agg")
 
     # Run gui and wait
     mainWin = tk.Tk()
