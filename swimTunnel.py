@@ -7,10 +7,18 @@ import numpy as np
 
 import config
 
+# Colors
+WHITE = (255,255,255)
+
 
 def swimTunnel(videoPath,expID,fps):
 
     # Init. Data
+    fAreaMin = config.FISH_AREA_MIN
+    fAreaMax = config.FISH_AREA_MAX
+    bAreaMin = config.BOX_AREA_MIN
+    bAreaMax = config.BOX_AREA_MAX
+
     dataPath = config.DATA_PATH
     exportPath = config.EXPORT_PATH
     videoPath = str(pathlib.Path(videoPath))
@@ -32,9 +40,9 @@ def swimTunnel(videoPath,expID,fps):
     failFrames = 0
     matchContour = 1.0
 
-    # First walk. Define a smaller image movement subset and crop.
+    # First video loop. Define a smaller image movement subset and crop.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob
-    totalFrames, (rx, ry, rw, rh), (mbx, mby, mbw, mbh) = getMainBox(videoPath)
+    totalFrames, (rx, ry, rw, rh), (mbx, mby, mbw, mbh) = getMainBox(videoPath, bAreaMin, bAreaMax)
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
@@ -43,7 +51,7 @@ def swimTunnel(videoPath,expID,fps):
     # Read the first frame for second video walk
     _, frame = vid.read()
 
-    # Second video walk to find the skeleton and its data
+    # Second video loop to find the skeleton and its data
     logging.info("Extracting data...")
 
     while (frame is not None):
@@ -53,12 +61,12 @@ def swimTunnel(videoPath,expID,fps):
         frame = frame[ry:(ry+rh), rx:(rx+rw)]
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
         originalFrame = frame
-
+        
         # Step2 -- PreProcess the image
         frame = preprocess(frame, True, True)
-
+        
         # Step3 -- Fish contour and skeleton detection
-        fishContours = getFishContours(frame)
+        fishContours = getFishContours(frame, fAreaMin, fAreaMax)
         fishSkeleton = getFishSkeleton(frame)
 
         # Step4 -- Validate and Show/Save the results
@@ -89,9 +97,9 @@ def swimTunnel(videoPath,expID,fps):
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
             out.write(originalFrame)
 
-            # # DebugOnly: Show results
-            # cv.imshow('Video', originalFrame)
-            # cv.waitKey(1)
+            # DebugOnly: Show results
+            cv.imshow('Video', originalFrame)
+            cv.waitKey(1)
 
         else:
             failFrames += 1
@@ -103,12 +111,12 @@ def swimTunnel(videoPath,expID,fps):
             if (failFrames >= 10 * totalFrames /100):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
 
-            # # DebugOnly: Show results
-            # cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
-            # cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
-            # cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
-            # cv.imshow('Video', originalFrame)
-            # cv.waitKey(0)
+            # DebugOnly: Show results
+            cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
+            cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
+            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
+            cv.imshow('Video', originalFrame)
+            cv.waitKey(0)
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -131,11 +139,15 @@ def getMovementBox(frame):
     element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*morphSize+1, 2*morphSize+1), (morphSize, morphSize))
     frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element)
 
-    # Canny Edge-Detection
-    frame = cv.Canny(frame, 100, 200)
+    # Auto Canny Edge-Detection
+    v = np.median(frame)
+    sigma = 0.33
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    frame = cv.Canny(frame, lower, upper)
 
     # Find countours
-    _, contours, _ = cv.findContours(frame, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    _ret, contours, _hier= cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # Join the contours in one
     if (np.size(contours) == 0):
@@ -146,10 +158,16 @@ def getMovementBox(frame):
             joinedContours = np.concatenate((joinedContours,contours[i]),0) # faster than an insert
         (mx, my, mw, mh) = cv.boundingRect(joinedContours)
 
+    # # DebugOnly: Show the boxes union
+    # drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
+    # cv.rectangle(drawing, (mx, my), (mw+mx, my+mh), WHITE, 1, 8, 0)
+    # cv.imshow("movement box", drawing)
+    # cv.waitKey(1)
+
     return np.array([mx, my, mw, mh], int)
 
 
-def getMainBox(videoPath):
+def getMainBox(videoPath, bAreaMin, bAreaMax):
 
     totalFrames = 0
 
@@ -170,10 +188,10 @@ def getMainBox(videoPath):
     (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
     cv.destroyAllWindows()
 
-    # Init. main box to the union
+    # Init. main box of the union
     (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
 
-    # First walk to detect the movement domain and the total number of frames
+    # First loop to detect the movement domain and the total number of frames
     logging.info("Detecting the movement domain...")
     while(backFrame is not None):
         
@@ -185,17 +203,10 @@ def getMainBox(videoPath):
         # Step2 -- Update of the background model and the movement domain
         backFrame = preprocess(backFrame, True, False)
         backFrame = pMOG2.apply(backFrame)
-        
         (mx, my, mw, mh) = getMovementBox(backFrame)
-        
-        # # DebugOnly: Show the boxes union
-        # drawing2 = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
-        # cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh),(255, 255, 255), 1, 8, 0)
-        # cv.imshow("movement box", drawing2)
-        # cv.waitKey(1)
 
-        # Step3 -- Join the boxes ommiting the limit ones
-        if ((mw*mh > 10000) and (mw*mh < 28000)):
+        # Step3 -- Join the boxes ommiting the limit ones #TODO: do not work properly
+        if ((mw*mh > bAreaMin) and (mw*mh < bAreaMax)):
             # Horizontal coords
             if (mx < mbx):
                 if ( mx+mw < mbx+mbw):
@@ -214,9 +225,8 @@ def getMainBox(videoPath):
                     mbh = mh + (my-mby)
 
         # # DebugOnly: Show the boxes union
-        # print(mbx, mby, mbw, mbh)
         # drawing = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
-        # cv.rectangle(backFrame, (mbx, mby), (mbw+mbx, mby+mbh),(255, 255, 255), 1, 8, 0)
+        # cv.rectangle(drawing, (mbx, mby), (mbw+mbx, mby+mbh), WHITE, 3, 8, 0)
         # cv.imshow("Main box", drawing)
         # cv.waitKey(1)
 
@@ -234,10 +244,10 @@ def preprocess(frame, blur, threshold):
     # Force B&W
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
-    # Apply gamma correction using the lookup table
-    invGamma = 1.0/2
-    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-    frame = cv.LUT(frame, table)
+    # # Apply gamma correction using the lookup table
+    # invGamma = 1.0/2
+    # table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    # frame = cv.LUT(frame, table)
 
     if (blur):
         # Clean Noise
@@ -246,43 +256,48 @@ def preprocess(frame, blur, threshold):
 
     if (threshold):
         # Threshold by color
-        frame = cv.inRange(frame, 0, 110)
+        _ret, frame = cv.threshold(frame, 200, 255, 0 )
 
-    # # DebugOnly: Show preprocess image
-    # cv.imshow("PreProcess",frame)
-    # cv.waitKey(1)
+    # DebugOnly: Show preprocess image
+    cv.imshow("PreProcess",frame)
+    cv.waitKey(1)
 
     return frame
 
 
-def getFishContours(frame):
+def getFishContours(frame, fAreaMin, fAreaMax):
 
-    # Canny Edge-Detection
-    frame = cv.Canny(frame, 100, 200)
+    # Auto Canny Edge-Detection
+    v = np.median(frame)
+    sigma = 0.33
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    frame = cv.Canny(frame, lower, upper)
 
     # Find and draw Contours
-    _, contours, _ = cv.findContours(frame, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    _ret, contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
-    # Delete unnecessary blobs TODO: No absolute values!
+    # Delete unnecessary blobs
     iFishContour = 0
     for i in range(np.size(contours, 0)):
 
         area = cv.contourArea(contours[i], False)
-
-        if (area > 5500 and area < 6500):
+        # print(area)
+        if (area > fAreaMin and area < fAreaMax):
+            
             iFishContour = i
     
-    # # DebugOnly: Draw all contours
+    # # DebugOnly: Draw fish
     # drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
-    # cv.drawContours(drawing, contours, iFishContour, (255, 255, 255), 2)
+    # cv.drawContours(drawing, contours, iFishContour, WHITE, 2)
     # cv.imshow("Fish Contours", drawing)
     # cv.waitKey(1)
 
     # # DebugOnly: Draw all contours
     # drawing2 = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
-    # cv.drawContours(drawing2,contours,-1,(0,0,255),2)#-1 to print all contours
+    # cv.drawContours(drawing2,contours,-1,WHITE,2) #-1 to print all contours
     # cv.imshow("All Contours",drawing2)
-    # cv.waitKey(1)
+    # cv.waitKey(0)
 
     return contours[iFishContour]
 
@@ -291,9 +306,9 @@ def getFishSkeleton(frame):
 
     # Create the skeleton through Zhang-Suen thinning 
     frame = cv.ximgproc.thinning(frame, 0)
-
+    
     # Find the Skeleton
-    _, contours, _ = cv.findContours(frame, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+    _ret, contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # Delete unnecessary lines
     maxLen = 0
@@ -335,7 +350,8 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/water_tunnel.avi"
+    # videoPath = "./video/water_tunnel.avi"
+    videoPath = "./video/fishcremat.avi"
     #videoPath = "/home/avalls/Downloads/Water_tunnel.avi"
     expID = "ExpID"
 
