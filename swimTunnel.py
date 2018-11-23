@@ -256,7 +256,7 @@ def preprocess(frame, blur, threshold):
 
     if (threshold):
         # Threshold by color
-        _ret, frame = cv.threshold(frame, 200, 255, 0 )
+        _ret, frame = cv.threshold(frame, 200, 255, 1 )
 
     # DebugOnly: Show preprocess image
     cv.imshow("PreProcess",frame)
@@ -281,8 +281,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
     iFishContour = 0
     for i in range(np.size(contours, 0)):
 
-        area = cv.contourArea(contours[i], False)
-        # print(area)
+        area = cv.contourArea(contours[i])
         if (area > fAreaMin and area < fAreaMax):
             
             iFishContour = i
