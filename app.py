@@ -276,7 +276,7 @@ if (__name__ == "__main__"):
 
     # Logs configuration
     logging.basicConfig(
-        filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
+        # filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
         level=logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s"
     )

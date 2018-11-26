@@ -8,7 +8,10 @@ import numpy as np
 import config
 
 # Colors
-WHITE = (255,255,255)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (0, 0, 255)
+BLUE = (255, 0, 0,)
 
 
 def swimTunnel(videoPath,expID,fps):
@@ -92,9 +95,9 @@ def swimTunnel(videoPath,expID,fps):
             exportResults(dataPath, expID, fishSkeleton, numFrame, True)
 
             # Save the frame in file
-            cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1)
-            cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1)
-            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
+            cv.polylines(originalFrame, fishContours, True, BLUE, 1)
+            cv.polylines(originalFrame, fishSkeleton, True, RED, 1)
+            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), GREEN, 1, 8, 0)
             out.write(originalFrame)
 
             # DebugOnly: Show results
@@ -112,11 +115,11 @@ def swimTunnel(videoPath,expID,fps):
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
 
             # DebugOnly: Show results
-            cv.polylines(originalFrame, fishContours, True,(0, 255, 0), 1,8)
-            cv.polylines(originalFrame, fishSkeleton, True, (0, 0, 255), 1,8)
-            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), (255, 255, 255), 1, 8, 0)
+            cv.polylines(originalFrame, fishContours, True, RED, 1,8)
+            cv.polylines(originalFrame, fishSkeleton, True, RED, 1,8)
+            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), RED, 1, 8,)
             cv.imshow('Video', originalFrame)
-            cv.waitKey(0)
+            cv.waitKey(1)
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -130,7 +133,6 @@ def swimTunnel(videoPath,expID,fps):
     logging.info("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
 
     return failFrames
-
 
 def getMovementBox(frame):
 
@@ -165,7 +167,6 @@ def getMovementBox(frame):
     # cv.waitKey(1)
 
     return np.array([mx, my, mw, mh], int)
-
 
 def getMainBox(videoPath, bAreaMin, bAreaMax):
 
@@ -238,7 +239,6 @@ def getMainBox(videoPath, bAreaMin, bAreaMax):
     
     return totalFrames, np.array([rx,ry,rw,rh], int), np.array([mbx,mby,mbw,mbh], int) # [crop region] and [main box coords]
 
-
 def preprocess(frame, blur, threshold):
 
     # Force B&W
@@ -255,7 +255,7 @@ def preprocess(frame, blur, threshold):
         frame = cv.medianBlur(frame, 9)
 
     if (threshold):
-        # Threshold by color
+        # Threshold
         _ret, frame = cv.threshold(frame, 200, 255, 1 )
 
     # DebugOnly: Show preprocess image
@@ -263,7 +263,6 @@ def preprocess(frame, blur, threshold):
     cv.waitKey(1)
 
     return frame
-
 
 def getFishContours(frame, fAreaMin, fAreaMax):
 
@@ -283,7 +282,6 @@ def getFishContours(frame, fAreaMin, fAreaMax):
 
         area = cv.contourArea(contours[i])
         if (area > fAreaMin and area < fAreaMax):
-            
             iFishContour = i
     
     # # DebugOnly: Draw fish
@@ -300,10 +298,9 @@ def getFishContours(frame, fAreaMin, fAreaMax):
 
     return contours[iFishContour]
 
-
 def getFishSkeleton(frame):
 
-    # Create the skeleton through Zhang-Suen thinning 
+    # Find the skeleton through Zhang-Suen thinning 
     frame = cv.ximgproc.thinning(frame, 0)
     
     # Find the Skeleton
@@ -319,7 +316,6 @@ def getFishSkeleton(frame):
 
     return contours[iFishSkeleton]
 
-
 def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 
     # Save skeleton to a numpy binary array file *.npy
@@ -329,10 +325,8 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
         # Write an ampty file if the frame is failed
         np.save(pathlib.Path(dataPath,expID + "_" + str(step)),0)
 
-    return 0
-
-
 def cleanData(dirPath):
+
     # Check/Create paths
     pathlib.Path(dirPath).mkdir(parents=True, exist_ok=True)
     # Clean previous data if exisists
@@ -351,7 +345,7 @@ if (__name__ == "__main__"):
     fps = 1000
     # videoPath = "./video/water_tunnel.avi"
     videoPath = "./video/fishcremat.avi"
-    #videoPath = "/home/avalls/Downloads/Water_tunnel.avi"
+    # videoPath = "./video/fishratlles.avi"
     expID = "ExpID"
 
     try:

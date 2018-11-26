@@ -3,7 +3,7 @@ import numpy as np
  
 window_name = "ThresholdTest"
 
-cap = cv.VideoCapture("./video/fishcremat.avi")
+cap = cv.VideoCapture("./video/fishratlles.avi")
 _ret, src =cap.read()
 
 # Choose ROI
