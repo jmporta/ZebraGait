@@ -34,7 +34,9 @@ class mainWindow:
 
         # WINDOW PROPERTIES
 
-        defaultVid = "./video/water_tunnel.avi"
+        defaultName = "ExpID"
+        defaultVid = "./video/fishcremat.avi"
+        defaultSaveVid = "./export/"
         defaultFrames = "1000"
 
         # Main window
@@ -67,7 +69,7 @@ class mainWindow:
         self.lblVidId =  tk.Label(self.mainFrame, text="ExperimentID:")
         self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=10, pady=5)
 
-        self.defaultID = tk.StringVar(self.mainFrame, value="ExpID")
+        self.defaultID = tk.StringVar(self.mainFrame, value=defaultName)
         self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID)
         self.txtVidId.grid(column=1, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
@@ -78,6 +80,17 @@ class mainWindow:
         self.defaultFps = tk.StringVar(self.mainFrame, value=defaultFrames)
         self.txtVidFps =  tk.Entry(self.mainFrame, width=5, textvariable=self.defaultFps)
         self.txtVidFps.grid(column=3, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
+
+        # Video open path
+        self.lblSavePath =  tk.Label(self.mainFrame, text="Save path:")
+        self.lblSavePath.grid(column=0, row=2, sticky=tk.W, padx=10, pady=5)
+
+        self.defaultSavePath = tk.StringVar(self.mainFrame, value=defaultSaveVid)
+        self.txtSavePath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultSavePath)
+        self.txtSavePath.grid(column=1, row=2, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
+
+        self.btnSavePath =  tk.Button(self.mainFrame, text="Select", command=self.clickSavePath)
+        self.btnSavePath.grid(column=4, row=2, sticky=tk.W, padx=5, pady=5)
 
         # RUN FRAME
 
@@ -106,25 +119,26 @@ class mainWindow:
         self.btnShow.grid(column=3, row=0, sticky=tk.E, padx=5, pady=5)
 
         # List of buttons to threading
-        self.buttons = [self.btnRun, self.btnShow, self.btnPath]
+        self.buttons = [self.btnRun, self.btnShow, self.btnPath, self.btnSavePath]
 
     # FUNCS
 
     # Main functions
     def runProcess(self):
         # The selected video will be processed and the resultant data will be treated.
-        # It saves the skeletons in "./data/" and the resultant video in "./export" using swimTunnel function.
-        # It saves a cvs file in a "./export/" and treated data in "./data/" using treatData function.
+        # It saves the skeletons in "./data/" and the resultant video in exportPath using swimTunnel function.
+        # It saves a cvs file in exportPath and treated data in "./data/" using treatData function.
         try:
             videoPath = self.txtPath.get()
             expID = self.txtVidId.get()
             fps = int(self.txtVidFps.get())
+            exportPath = self.txtSavePath.get()
             if ((fps > 0) and (fps < 1001)):
                 # Run computations
-                self.lblStatus.config(text="Processing the video...")
-                swimTunnel(videoPath, expID, fps)
-                self.lblStatus.config(text="Computing the data...")
-                treatData(expID, fps)
+                self.lblStatus.config(text = "Processing the video...")
+                swimTunnel(videoPath, exportPath, expID, fps)
+                self.lblStatus.config(text = "Computing the data...")
+                treatData(exportPath, expID, fps)
             else:
                 raise Exception("The fps value must be in [1,1000].")
         except Exception as err:
@@ -132,20 +146,21 @@ class mainWindow:
             logging.error(err)
             self.lblStatus.config(text="Ready")
         else:
-            tk.messagebox.showinfo("Info", "The video has been processed. Check the results in './export' folder.")
+            tk.messagebox.showinfo("Info", "The video has been processed. Check the results in "+ str(exportPath) +" folder.")
             logging.info("The video has been processed.")
             self.lblStatus.config(text="Ready")
 
     def showResults(self):
         # It shows the data in the "./export" folder.
         try:
+            importPath = self.txtSavePath.get()
             expID = self.txtVidId.get()
             fps = int(self.txtVidFps.get())
-            beta, gamma, videoPathR, csvPathR = showData(expID, fps, gui=True)
+            ind, beta, gamma, videoPathR = showData(importPath, expID, fps, gui=True)
 
             # New Window
             showWin = tk.Toplevel(self.master)
-            showWindow(showWin, beta, gamma, videoPathR, csvPathR)
+            showWindow(showWin, ind, beta, gamma, videoPathR)
         except Exception as err:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
@@ -153,10 +168,19 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = "/home/"
-        filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
-        self.txtPath.delete(0, tk.END)
-        self.txtPath.insert(0, filePath)
+        iniPath = "/home/" #TODO: change to multiplatform
+        filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
+        if filePath != () and filePath != "":
+            self.txtPath.delete(0, tk.END)
+            self.txtPath.insert(0, filePath)
+
+    def clickSavePath(self):
+        iniSavePath = "/home/"  # TODO: change to multiplatform
+        fileSavePath = tk.filedialog.askdirectory(initialdir=iniSavePath, title="Select folder to save")
+        print(fileSavePath)
+        if fileSavePath != () and fileSavePath !="":
+            self.txtSavePath.delete(0, tk.END)
+            self.txtSavePath.insert(0, fileSavePath)
 
     def clickRun(self):
         self.run_thread("run", self.runProcess)
@@ -186,7 +210,7 @@ class showWindow:
 
     # MASONRY
 
-    def __init__(self, master, beta, gamma, videoPathR, csvPathR):
+    def __init__(self, master, ind, beta, gamma, videoPathR):
 
         # WINDOW PROPERTIES
         
@@ -223,7 +247,7 @@ class showWindow:
         self.trackBarVid.grid(row=1, column=1, sticky=(tk.W, tk.S))
 
         # Draw the first frame
-        self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB) # exchange BGR(openCV) to RGB(tkinter)
+        self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB) # change BGR(openCV) to RGB(tkinter)
         self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame)) # use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
         self.canvasVidArea = self.canvasVid.create_image(0, 0, image=self.photo, anchor=tk.NW) # add a PhotoImage to the Canvas
     
@@ -231,7 +255,7 @@ class showWindow:
 
         # Figure
         self.beta = beta
-        self.x = np.arange(0, np.size(self.beta, 0))
+        self.x = ind
         self.fig = pl.figure(figsize=(6, 4), dpi=100)
         pl.title("Angle between the tail and the head perpendicular (beta)")
         pl.xlabel("Frame")
@@ -276,6 +300,7 @@ if (__name__ == "__main__"):
 
     # Logs configuration
     logging.basicConfig(
+        # TODO: uncomment for log file
         # filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
         level=logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s"

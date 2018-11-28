@@ -22,8 +22,6 @@ CV - Movement detection/description of a fish in a swim-tunnel.
     ```
 
 ## TODO
-+ `swimTunnell.py`: Obtain a smaller fish location domain using the previous fish bounding box. Check if the current skeleton is in it.
+
 
 ## Known bugs
-+ `swimTunnell.py`: The raw/avi original fish video throw a warning in opencv videocapture function. Cause: lack metadata? need codecs?
-+ `treatData.py`: The matrix A reshape of the imported skeleton data crash with the raw/avi original fish video. Cause: maybe a limit index situation?

@@ -4,70 +4,68 @@ import matplotlib.pyplot as pl
 
 import config
 
-def showData(expID, fps, gui=False):
+def showData(exportPath, expID, fps, gui=False):
 
     # Init. data
     dataPath = config.DATA_PATH
-    exportPath = config.EXPORT_PATH
 
     # Import data
-    ampl, beta, gamma = importMesures(dataPath, expID)
+    ind, ampl, beta, gamma = importMesures(dataPath, expID)
 
     # Plot data
     if gui:
-        return beta, gamma, pathlib.Path(exportPath, expID + ".avi"), pathlib.Path(exportPath,expID + ".csv")
+        return ind, beta, gamma, pathlib.Path(exportPath, expID + ".avi")
     else:
-        plotGraphs(ampl, beta, gamma)
-
-    return 0
-
+        plotGraphs(ind, ampl, beta, gamma)
 
 def importMesures(dataPath, expID):
 
     # Import all the data in npy files
+    ind = np.load(pathlib.Path(dataPath, expID + "_ind.npy"))
     ampl = np.load(pathlib.Path(dataPath, expID + "_ampl.npy"))
     beta = np.load(pathlib.Path(dataPath, expID + "_beta.npy"))
     gamma = np.load(pathlib.Path(dataPath, expID + "_gamma.npy"))
 
-    return ampl, beta, gamma
+    return ind, ampl, beta, gamma
 
-
-def plotGraphs(ampl, beta, gamma):
+def plotGraphs(ind, ampl, beta, gamma):
 
     # Plot the amplitude
     pl.figure(1)
-    x = np.arange(0, np.size(ampl, 0))
-    pl.plot(x, ampl, "r", linewidth=0.5)
-    pl.plot(np.zeros(np.size(x)), 'b--', linewidth=0.5)
+    #x = np.arange(0, np.size(ampl, 0))
+    pl.plot(ind, ampl, "r", linewidth=0.5)
+    pl.plot(np.zeros(np.size(ind)), 'b--', linewidth=0.5)
     pl.suptitle("Amplitude of the tail to the head perpendicular")
     pl.ylabel("Amplitude(px)")
     pl.xlabel("Frame")
 
     # Plot the Tail-Angle beta
     pl.figure(2)
-    x = np.arange(0, np.size(beta, 0))
-    pl.plot(x, beta, "r", linewidth=0.5)
-    pl.plot(np.zeros(np.size(x)), 'b--', linewidth=0.5)
+    #x = np.arange(0, np.size(beta, 0))
+    pl.plot(ind, beta, "r", linewidth=0.5)
+    pl.plot(np.zeros(np.size(ind)), 'b--', linewidth=0.5)
     pl.suptitle("Angle between the tail and the head perpendicular (beta)")
     pl.ylabel("Tail angle (rad)")
     pl.xlabel("Frame")
 
     # Plot Tail-Head angle gamma
-    x = np.arange(0, np.size(gamma, 0))
+    #x = np.arange(0, np.size(gamma, 0))
     pl.figure(3)
-    pl.plot(x, gamma, "r", linewidth=0.5)
-    pl.plot(np.pi*np.ones(np.size(x)), 'b--', linewidth=0.5)
+    pl.plot(ind, gamma, "r", linewidth=0.5)
+    pl.plot(np.pi*np.ones(np.size(ind)), 'b--', linewidth=0.5)
     pl.suptitle("Angle between the tail and the head perpendicular(beta)")
     pl.ylabel("Tail-Head angle (rad)")
     pl.xlabel("Frame")
 
-
     # Show Plots
     pl.show()
 
-    return 0
-
-
 if (__name__ == "__main__"):
-    showData("ExpID", 1000)
+
+    exportPath = "./export/"
+    expID = "TestFish"
+    fps = 1000
+
+    showData(exportPath,expID, fps)
+    
     print("DONE.")

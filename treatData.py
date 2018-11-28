@@ -7,12 +7,11 @@ import numpy as np
 import config
 
 
-def treatData(expID, fps):
+def treatData(exportPath, expID, fps):
 
     # Init. data
     axisLon = config.AXIS_LON  
     dataPath = config.DATA_PATH
-    exportPath = config.EXPORT_PATH
 
     # Clean previous data
     cleanData(dataPath,expID)
@@ -22,21 +21,19 @@ def treatData(expID, fps):
 
     # Obtain data
     logging.info("Computing Data...")
-    tailP, headP, headPe, nValidFrames = importData(dataPath, expID, axisLon, nFiles)
-    print("import done")
+    ind, tailP, headP, headPe, nValidFrames = importData(dataPath, expID, axisLon, nFiles)
     ampl, beta, gamma = computeData(tailP, headP, headPe, nValidFrames)
+    ind[:nValidFrames] = (nFiles/fps)*ind[:nValidFrames]
 
     # Export data
-    exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames)
+    exportData(ind, tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames)
 
     logging.info("Computation DONE.")
-
-    return 0
-
 
 def importData(filePath, expID, axisLon, nFiles):
 
     # Init. the main arrays
+    ind = np.zeros((nFiles), int)
     A = np.zeros((1, 2), int)
     tailP = np.zeros((nFiles, 2), int)
     headP = np.zeros((nFiles, 2), int)
@@ -56,14 +53,14 @@ def importData(filePath, expID, axisLon, nFiles):
             A = np.unique(A, axis=0)  # delete repeated points
             A[:, 1] = -A[:, 1]# convert coords. to R^2 (original ones are image matrix indicies)
             # Save data
+            ind[k] = i
             tailP[k, :] = A[0, :]
             headP[k, :] = A[-1, :]
             headPe[k, :] = A[-axisLon, :]
             # Update the valid index
             k += 1
 
-    return tailP, headP, headPe, k
-
+    return ind, tailP, headP, headPe, k
 
 def computeData(tailP, headP, headPe, nValidFrames):
 
@@ -91,32 +88,32 @@ def computeData(tailP, headP, headPe, nValidFrames):
 
     return ampl, beta, gamma
 
-
-def exportData(tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames):
+def exportData(ind, tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames):
 
     # Export all the data in a cvs file
-    dataHeader = "x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude,TailAngle(beta),TailHeadAngle(Gamma)"
-    data = np.transpose([tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], headP[:nValidFrames, 0],
+    dataHeader = "Time(ms), x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude(px),TailAngle(beta),TailHeadAngle(gamma)"
+    data = np.transpose([ind[:nValidFrames], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], headP[:nValidFrames, 0],
                          headP[:nValidFrames, 1], headPe[:nValidFrames, 0], headPe[:nValidFrames, 1], ampl, beta, gamma])
     np.savetxt(pathlib.Path(exportPath,expID + ".csv"), data, fmt="%10.5f",
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files to show faster in showData
+    np.save(pathlib.Path(dataPath, expID + "_ind"), ind[:nValidFrames])
     np.save(pathlib.Path(dataPath, expID + "_ampl"), ampl)
     np.save(pathlib.Path(dataPath, expID + "_beta"), beta)
     np.save(pathlib.Path(dataPath, expID + "_gamma"), gamma)
 
     return 0
 
-
 def cleanData(dirPath,expID):
+    if (pathlib.Path(dirPath, expID + "_ind.npy").exists()):
+        os.remove(pathlib.Path(dirPath, expID + "_ampl.npy"))
     if (pathlib.Path(dirPath,expID + "_ampl.npy").exists()):
         os.remove(pathlib.Path(dirPath, expID + "_ampl.npy"))
     if (pathlib.Path(dirPath, expID + "_beta.npy").exists()):
         os.remove(pathlib.Path(dirPath, expID + "_beta.npy"))
     if (pathlib.Path(dirPath, expID + "_gamma.npy").exists()):
         os.remove(pathlib.Path(dirPath, expID + "_gamma.npy"))
-
 
 if (__name__ == "__main__"):
 
@@ -125,11 +122,12 @@ if (__name__ == "__main__"):
         format="%(levelname)s: %(message)s"
     )
 
-    expID = "ExpID"
+    exportPath = "./export/"
+    expID = "TestFish"
     fps = 1000
 
     try:
-        treatData(expID, fps)
+        treatData(exportPath, expID, fps)
     except Exception as err:
         logging.error(err)
     
