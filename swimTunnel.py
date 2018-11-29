@@ -17,6 +17,7 @@ BLUE = (255, 0, 0,)
 def swimTunnel(videoPath, exportPath, expID, fps):
 
     # Init. Data
+    contrast = config.CONTRAST
     fAreaMin = config.FISH_AREA_MIN
     fAreaMax = config.FISH_AREA_MAX
     bAreaMin = config.BOX_AREA_MIN
@@ -44,7 +45,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     # First video loop. Define a smaller image movement subset and crop.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob
-    totalFrames, (mbx, mby, mbw, mbh) = getMainBox(videoPath, bAreaMin, bAreaMax)
+    totalFrames, (mbx, mby, mbw, mbh) = getMainBox(videoPath, contrast, bAreaMin, bAreaMax)
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
@@ -64,7 +65,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         originalFrame = frame
         
         # Step2 -- PreProcess the image
-        frame = preprocess(frame, True, True)
+        frame = preprocess(frame, contrast, True, True)
         
         # Step3 -- Fish contour and skeleton detection
         fishContours = getFishContours(frame, fAreaMin, fAreaMax)
@@ -157,15 +158,9 @@ def getMovementBox(frame):
             joinedContours = np.concatenate((joinedContours,contours[i]),0) # faster than an insert
         (mx, my, mw, mh) = cv.boundingRect(joinedContours)
 
-    # # DebugOnly: Show the boxes 
-    # drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
-    # cv.rectangle(drawing, (mx, my), (mw+mx, my+mh), WHITE, 3, 8)
-    # cv.imshow("movement box", drawing)
-    # cv.waitKey(1)
-
     return np.array([mx, my, mw, mh], int)
 
-def getMainBox(videoPath, bAreaMin, bAreaMax):
+def getMainBox(videoPath, contrast, bAreaMin, bAreaMax):
 
     totalFrames = 0
     layer = 10 # secure layer in pixels
@@ -200,13 +195,13 @@ def getMainBox(videoPath, bAreaMin, bAreaMax):
         backFrame = backFrame[ry:(ry+rh), rx:(rx+rw)]
 
         # Step2 -- Update of the background model and the movement domain
-        backFrame = preprocess(backFrame, True, False)
+        backFrame = preprocess(backFrame, contrast, True, False)
         backFrame = pMOG2.apply(backFrame)
+
         (mx, my, mw, mh) = getMovementBox(backFrame)
 
         # Step3 -- Join the boxes ommiting the limit ones
         if ((mw*mh > bAreaMin) and (mw*mh < bAreaMax)):
-
             x = min(mx, mbx)
             y = min(my, mby)
             w = max(mx+mw, mbx+mbw) - x
@@ -214,11 +209,11 @@ def getMainBox(videoPath, bAreaMin, bAreaMax):
 
             (mbx, mby, mbw, mbh) = (x, y, w, h) 
 
-        # # DebugOnly: Show the boxes union
-        # drawing = np.zeros((np.size(backFrame, 0), np.size(backFrame, 1)), np.uint8)
-        # cv.rectangle(drawing, (mbx, mby), (mbx+mbw, mby+mbh), WHITE, 3, 8)
-        # cv.imshow("Main box", drawing)
-        # cv.waitKey(1)
+        # DebugOnly: Show the boxes union
+        cv.rectangle(backFrame, (mbx, mby), (mbx+mbw, mby+mbh), WHITE, 3, 8)
+        cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh), WHITE, 1, 8)
+        cv.imshow("Main box", backFrame)
+        cv.waitKey(1)
 
         # Update the frame
         _, backFrame = backVid.read()
@@ -235,8 +230,8 @@ def getMainBox(videoPath, bAreaMin, bAreaMax):
         mbh = mbh+layer
     if mbx+mbw+layer < rw:
         mbw = mbw+layer
-    if mby+mby+layer < rh:
-        mbw = mbw+layer
+    if mby+mbh+layer < rh:
+        mbh = mbh+layer
 
     # Change coords to original image basis (ROI + MB)
     mbx = mbx + rx
@@ -244,7 +239,7 @@ def getMainBox(videoPath, bAreaMin, bAreaMax):
 
     return totalFrames, np.array([mbx,mby,mbw,mbh], int)
 
-def preprocess(frame, blur, threshold):
+def preprocess(frame, contrast, blur, threshold):
 
     # Force B&W
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
@@ -254,9 +249,11 @@ def preprocess(frame, blur, threshold):
     # table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
     # frame = cv.LUT(frame, table)
 
+    frame = cv.normalize(frame, None, 0, 255, cv.NORM_MINMAX)
+    frame = cv.convertScaleAbs(frame, alpha=contrast, beta=0)
+
     if (blur):
         # Clean Noise
-        frame = cv.normalize(frame, None, 0, 255, cv.NORM_MINMAX)
         frame = cv.GaussianBlur(frame, (5, 5), 0, 0)
         frame = cv.medianBlur(frame,7)
 
@@ -267,8 +264,8 @@ def preprocess(frame, blur, threshold):
         # Dilate one time the image for a better edges detection
         morphSize = 2
         element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*morphSize+1, 2*morphSize+1), (morphSize, morphSize))
-        frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element, iterations=1)
-        frame = cv.morphologyEx(frame, cv.MORPH_CLOSE, element, iterations=2)
+        frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element, iterations=2)
+        frame = cv.morphologyEx(frame, cv.MORPH_CLOSE, element, iterations=2) 
         
         
     # DebugOnly: Show preprocess image
@@ -358,7 +355,7 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/fishcremat.avi"
+    videoPath = "./video/fishbo.avi"
     expID = "TestFish"
     exportPath = "./export/"
 

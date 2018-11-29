@@ -10,7 +10,7 @@ import config
 def treatData(exportPath, expID, fps):
 
     # Init. data
-    axisLon = config.AXIS_LON  
+    axisLen = config.AXIS_LEN  
     dataPath = config.DATA_PATH
 
     # Clean previous data
@@ -21,20 +21,20 @@ def treatData(exportPath, expID, fps):
 
     # Obtain data
     logging.info("Computing Data...")
-    ind, tailP, headP, headPe, nValidFrames = importData(dataPath, expID, axisLon, nFiles)
-    ampl, beta, gamma = computeData(tailP, headP, headPe, nValidFrames)
+    ind, tailP, headP, headPe, nValidFrames = importData(dataPath, expID, axisLen, nFiles)
+    beta = computeData(tailP, headP, headPe, nValidFrames)
     ind[:nValidFrames] = (nFiles/fps)*ind[:nValidFrames]
 
     # Export data
-    exportData(ind, tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames)
+    exportData(ind, tailP, headP, headPe, beta, dataPath, exportPath, expID, nValidFrames)
 
     logging.info("Computation DONE.")
 
-def importData(filePath, expID, axisLon, nFiles):
+def importData(filePath, expID, axisLen, nFiles):
 
     # Init. the main arrays
     ind = np.zeros((nFiles), int)
-    A = np.zeros((1, 2), int)
+    skeleton = np.zeros((1, 2), int)
     tailP = np.zeros((nFiles, 2), int)
     headP = np.zeros((nFiles, 2), int)
     headPe = np.zeros((nFiles, 2), int)
@@ -44,19 +44,21 @@ def importData(filePath, expID, axisLon, nFiles):
     for i in range(nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
-        A = np.load(pathlib.Path(filePath,expID + "_" + str(i+1) + ".npy"))
+        skeleton = np.load(pathlib.Path(filePath,expID + "_" + str(i+1) + ".npy"))
         
-        if not np.array_equal(A, 0):
+        if not np.array_equal(skeleton, 0):
             # Data pre-treatment
-            A = np.reshape(A, (np.size(A, 0), 2)) # convert the array-points to a matrix
-            A = A[np.argsort(A[:, 0])]  # sort points by x
-            A = np.unique(A, axis=0)  # delete repeated points
-            A[:, 1] = -A[:, 1]# convert coords. to R^2 (original ones are image matrix indicies)
-            # Save data
+            skeleton = np.reshape(skeleton, (np.size(skeleton, 0), 2)) # convert the array-points to a matrix
+            skeleton = skeleton[np.argsort(skeleton[:, 0])] # sort points by x
+            skeleton = np.unique(skeleton, axis=0) # delete repeated points
+            skeleton[:, 1] = -skeleton[:, 1] # convert coords. to R^2 (original ones are image matrix indicies)
+            # Skeleton treatmeant
+            skeletonLen = computeSK(skeleton)
+            # # Save points
             ind[k] = i
-            tailP[k, :] = A[0, :]
-            headP[k, :] = A[-1, :]
-            headPe[k, :] = A[-axisLon, :]
+            tailP[k, :] = skeleton[0, :]
+            headP[k, :] = skeleton[-1, :]
+            headPe[k, :] = skeleton[-int(skeletonLen*axisLen), :]
             # Update the valid index
             k += 1
 
@@ -82,38 +84,39 @@ def computeData(tailP, headP, headPe, nValidFrames):
         beta[i] = np.arcsin(ampl[i]/np.sqrt(np.abs(tailP[i, 0] -
                                                    headPe[i, 0])**2 + np.abs(tailP[i, 1]-headPe[i, 1])**2))
 
-    # Tail-Head angle
-    gamma = np.zeros(nValidFrames, float)
-    gamma[:] = np.pi - beta[:]
+    # # Tail-Head angle
+    # gamma = np.zeros(nValidFrames, float)
+    # gamma[:] = np.pi - beta[:]
 
-    return ampl, beta, gamma
+    return beta
 
-def exportData(ind, tailP, headP, headPe, ampl, beta, gamma, dataPath, exportPath, expID, nValidFrames):
+def computeSK(skeleton):
+    skeletonLen = 0
+    for i in range(1,len(skeleton)):
+        skeletonLen += np.sqrt((skeleton[i-1][0] - skeleton[i][0])**2 + (skeleton[i-1][1] - skeleton[i][1])**2)
+
+    return skeletonLen
+
+def exportData(ind, tailP, headP, headPe, beta, dataPath, exportPath, expID, nValidFrames):
 
     # Export all the data in a cvs file
-    dataHeader = "Time(ms), x_TailP,y_TailP,x_HeadP,y_HeadP,x_HeadPe,y_HeadPe,Amplitude(px),TailAngle(beta),TailHeadAngle(gamma)"
+    dataHeader = "Time(ms), x_Tail,y_Tail,x_Head,y_Head,x_Joint,y_Joint,TailAngle(beta)"
     data = np.transpose([ind[:nValidFrames], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], headP[:nValidFrames, 0],
-                         headP[:nValidFrames, 1], headPe[:nValidFrames, 0], headPe[:nValidFrames, 1], ampl, beta, gamma])
+                         headP[:nValidFrames, 1], headPe[:nValidFrames, 0], headPe[:nValidFrames, 1], beta])
     np.savetxt(pathlib.Path(exportPath,expID + ".csv"), data, fmt="%10.5f",
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files to show faster in showData
     np.save(pathlib.Path(dataPath, expID + "_ind"), ind[:nValidFrames])
-    np.save(pathlib.Path(dataPath, expID + "_ampl"), ampl)
     np.save(pathlib.Path(dataPath, expID + "_beta"), beta)
-    np.save(pathlib.Path(dataPath, expID + "_gamma"), gamma)
 
     return 0
 
 def cleanData(dirPath,expID):
     if (pathlib.Path(dirPath, expID + "_ind.npy").exists()):
-        os.remove(pathlib.Path(dirPath, expID + "_ampl.npy"))
-    if (pathlib.Path(dirPath,expID + "_ampl.npy").exists()):
-        os.remove(pathlib.Path(dirPath, expID + "_ampl.npy"))
+        os.remove(pathlib.Path(dirPath, expID + "_ind.npy"))
     if (pathlib.Path(dirPath, expID + "_beta.npy").exists()):
         os.remove(pathlib.Path(dirPath, expID + "_beta.npy"))
-    if (pathlib.Path(dirPath, expID + "_gamma.npy").exists()):
-        os.remove(pathlib.Path(dirPath, expID + "_gamma.npy"))
 
 if (__name__ == "__main__"):
 

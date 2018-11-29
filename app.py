@@ -35,7 +35,7 @@ class mainWindow:
         # WINDOW PROPERTIES
 
         defaultName = "ExpID"
-        defaultVid = "./video/fishcremat.avi"
+        defaultVid = "./video/fishbo.avi"
         defaultSaveVid = "./export/"
         defaultFrames = "1000"
 
@@ -156,11 +156,11 @@ class mainWindow:
             importPath = self.txtSavePath.get()
             expID = self.txtVidId.get()
             fps = int(self.txtVidFps.get())
-            ind, beta, gamma, videoPathR = showData(importPath, expID, fps, gui=True)
+            ind, beta, videoPathR = showData(importPath, expID, fps, gui=True)
 
             # New Window
             showWin = tk.Toplevel(self.master)
-            showWindow(showWin, ind, beta, gamma, videoPathR)
+            showWindow(showWin, ind, beta, videoPathR)
         except Exception as err:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
@@ -168,14 +168,14 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = "/home/" #TODO: change to multiplatform
+        iniPath = str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
         filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
             self.txtPath.delete(0, tk.END)
             self.txtPath.insert(0, filePath)
 
     def clickSavePath(self):
-        iniSavePath = "/home/"  # TODO: change to multiplatform
+        iniSavePath = str(pathlib.Path.home()) 
         fileSavePath = tk.filedialog.askdirectory(initialdir=iniSavePath, title="Select folder to save")
         print(fileSavePath)
         if fileSavePath != () and fileSavePath !="":
@@ -210,7 +210,7 @@ class showWindow:
 
     # MASONRY
 
-    def __init__(self, master, ind, beta, gamma, videoPathR):
+    def __init__(self, master, ind, beta, videoPathR):
 
         # WINDOW PROPERTIES
         
@@ -300,7 +300,7 @@ if (__name__ == "__main__"):
 
     # Logs configuration
     logging.basicConfig(
-        # TODO: uncomment for log file
+        # TODO: uncomment for log file/ distribution
         # filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
         level=logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s"
