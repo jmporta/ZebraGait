@@ -23,12 +23,10 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     bAreaMin = config.BOX_AREA_MIN
     bAreaMax = config.BOX_AREA_MAX
 
-    dataPath = config.DATA_PATH
     videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside its functions
 
-    # Check/Create/Clean data paths
-    checkAndClean(dataPath, clean=True)
-    checkAndClean(exportPath, clean=False)
+    # Check/Create paths
+    pathlib.Path(exportPath, expID, "data").mkdir(parents=True, exist_ok=True)
 
     # Open the video in a VideoCapture object
     vid = cv.VideoCapture(videoPath)
@@ -49,7 +47,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID + ".avi")), codec, fps, (mbw, mbh))
+    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw, mbh))
 
     # Read the first frame for second video walk
     _, frame = vid.read()
@@ -91,7 +89,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         # Check the frame and save the results
         if ((matchContour < 0.1) and (skeletonBelong)):
             # Export Results
-            exportResults(dataPath, expID, fishSkeleton, numFrame, validFrame=True)
+            exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=True)
 
             # Save the frame in file
             cv.polylines(originalFrame, fishContours, True, BLUE, 1)
@@ -106,7 +104,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             failFrames += 1
 
             # Export Results
-            exportResults(dataPath, expID, fishSkeleton, numFrame, validFrame=False)
+            exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=False)
 
             # Check the fail proportion
             if (failFrames >= 10 * totalFrames /100):
@@ -268,9 +266,9 @@ def preprocess(frame, contrast, blur, threshold):
         frame = cv.morphologyEx(frame, cv.MORPH_CLOSE, element, iterations=2) 
         
         
-    # DebugOnly: Show preprocess image
-    cv.imshow("PreProcess",frame)
-    cv.waitKey(1)
+    # # DebugOnly: Show preprocess image
+    # cv.imshow("PreProcess",frame)
+    # cv.waitKey(1)
 
     return frame
 
@@ -330,22 +328,10 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 
     # Save skeleton to a numpy binary array file *.npy
     if (validFrame):
-        np.save(pathlib.Path(dataPath, expID + "_" + str(step)), fishSkeleton)
+        np.save(pathlib.Path(dataPath, expID, "data", expID + "_" + str(step)), fishSkeleton)
     else:
         # Write an ampty file if the frame is failed
-        np.save(pathlib.Path(dataPath, expID + "_" + str(step)), 0)
-
-def checkAndClean(dirPath, clean):
-
-    # Check/Create paths
-    pathlib.Path(dirPath).mkdir(parents=True, exist_ok=True)
-
-    if clean:
-        # Clean previous data if exisists
-        fileList = pathlib.Path(dirPath).glob("*.npy*")
-        for fileName in fileList:
-            os.remove(pathlib.Path(fileName))
-
+        np.save(pathlib.Path(dataPath, expID, "data", expID + "_" + str(step)), 0)
 
 if (__name__ == "__main__"):
 
@@ -355,7 +341,7 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/fishbo.avi"
+    videoPath = "./video/fishTest.avi"
     expID = "TestFish"
     exportPath = "./export/"
 

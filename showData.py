@@ -30,7 +30,7 @@ def plotGraphs(ind, beta):
 
 
     # Plot the Tail-Angle beta
-    pl.figure(2)
+    pl.figure(1)
     #x = np.arange(0, np.size(beta, 0))
     pl.plot(ind, beta, "r", linewidth=0.5)
     pl.plot(np.zeros(np.size(ind)), 'b--', linewidth=0.5)
