@@ -36,7 +36,7 @@ class mainWindow:
 
         defaultName = "ExpID"
         defaultVid = "./video/fishbo.avi"
-        defaultSaveVid = "./export/"
+        defaultSaveVid = "/home/avalls/Desktop/ResultsACR"
         defaultFrames = "1000"
 
         # Main window
@@ -131,6 +131,9 @@ class mainWindow:
         try:
             videoPath = self.txtPath.get()
             expID = self.txtVidId.get()
+            if expID == "ExpID":
+                expID = pathlib.Path(videoPath).stem
+
             fps = int(self.txtVidFps.get())
             exportPath = self.txtSavePath.get()
             if ((fps > 0) and (fps < 1001)):
@@ -153,8 +156,11 @@ class mainWindow:
     def showResults(self):
         # It shows the data in the "./export" folder.
         try:
+            videoPath = self.txtPath.get()
             importPath = self.txtSavePath.get()
             expID = self.txtVidId.get()
+            if expID == "ExpID":
+                expID = pathlib.Path(videoPath).stem
             fps = int(self.txtVidFps.get())
             ind, beta, videoPathR = showData(importPath, expID, fps, gui=True)
 
@@ -168,7 +174,7 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
+        iniPath = "/home/avalls/Desktop/VideosACR" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
         filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
             self.txtPath.delete(0, tk.END)
@@ -259,7 +265,7 @@ class showWindow:
         self.fig = pl.figure(figsize=(6, 4), dpi=100)
         pl.title("Angle between the tail and the head perpendicular (beta)")
         pl.xlabel("Frame")
-        pl.ylabel("beta (rad)")
+        pl.ylabel("beta (dg)")
         self.betaFig, = pl.plot(self.x, self.beta, "r", linewidth=0.5)
         self.lineFig, = pl.plot(np.zeros(np.size(self.x)), 'b--', linewidth=0.5)
         self.pointDraw, = pl.plot(self.x[0], self.beta[0], "bo")

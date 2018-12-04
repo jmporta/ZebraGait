@@ -6,23 +6,21 @@ import config
 
 def showData(exportPath, expID, fps, gui=False):
 
-    # Init. data
-    dataPath = config.DATA_PATH
 
     # Import data
-    ind, beta, = importMesures(dataPath, expID)
+    ind, beta, = importMesures(exportPath, expID)
 
     # Plot data
     if gui:
-        return ind, beta, pathlib.Path(exportPath, expID + ".avi")
+        return ind, beta, pathlib.Path(exportPath, expID, expID + ".avi")
     else:
         plotGraphs(ind, beta)
 
 def importMesures(dataPath, expID):
 
     # Import all the data in npy files
-    ind = np.load(pathlib.Path(dataPath, expID + "_ind.npy"))
-    beta = np.load(pathlib.Path(dataPath, expID + "_beta.npy"))
+    ind = np.load(pathlib.Path(dataPath,expID,"data", expID + "_ind.npy"))
+    beta = np.load(pathlib.Path(dataPath,expID, "data", expID + "_beta.npy"))
 
     return ind, beta
 

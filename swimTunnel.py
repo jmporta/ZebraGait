@@ -26,7 +26,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside its functions
 
     # Check/Create paths
-    pathlib.Path(exportPath, expID, "data").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(exportPath, expID, "skeleton").mkdir(parents=True, exist_ok=True)
 
     # Open the video in a VideoCapture object
     vid = cv.VideoCapture(videoPath)
@@ -115,7 +115,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             cv.polylines(originalFrame, fishSkeleton, True, RED, 1,8)
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), RED, 1, 8,)
             cv.imshow('Video', originalFrame)
-            cv.waitKey(0)
+            cv.waitKey(1)
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -328,10 +328,10 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 
     # Save skeleton to a numpy binary array file *.npy
     if (validFrame):
-        np.save(pathlib.Path(dataPath, expID, "data", expID + "_" + str(step)), fishSkeleton)
+        np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), fishSkeleton)
     else:
         # Write an ampty file if the frame is failed
-        np.save(pathlib.Path(dataPath, expID, "data", expID + "_" + str(step)), 0)
+        np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), 0)
 
 if (__name__ == "__main__"):
 

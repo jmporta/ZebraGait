@@ -18,10 +18,10 @@ def treatData(exportPath, expID, fps):
     partJoint = config.PARTITION_JOINT
 
     # Check/Create paths
-    pathlib.Path(exportPath, expID, "counts").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(exportPath, expID, "data").mkdir(parents=True, exist_ok=True)
 
     # Number of files
-    nFiles = len(list(pathlib.Path(exportPath,expID,"data").glob("*.npy")))
+    nFiles = len(list(pathlib.Path(exportPath,expID,"skeleton").glob("*.npy")))
 
     # Obtain data
     logging.info("Computing Data...")
@@ -54,7 +54,7 @@ def importData(filePath, expID, partJoint, nFiles):
     for i in range(nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
-        skeleton = np.load(pathlib.Path(filePath,expID,"data",expID + "_" + str(i+1) + ".npy"))
+        skeleton = np.load(pathlib.Path(filePath,expID,"skeleton",expID + "_" + str(i+1) + ".npy"))
         
         if not np.array_equal(skeleton, 0):
             # Data pre-treatment
@@ -65,7 +65,7 @@ def importData(filePath, expID, partJoint, nFiles):
 
             # Skeleton pretreatmeant
             _skeletonLen, joint = lenPartSK(skeleton, partJoint)
-            gamma[k], torsionP[k,:], PART = computeGamma(skeleton, joint)
+            gamma[k], torsionP[k,:], _PART = computeGamma(skeleton, joint)
 
             # Save points- Fish direction swimming: left
             ind[k] = i
@@ -139,7 +139,7 @@ def computeGamma(skeleton, joint):
     partSK[0, :] = skeleton[joint, :]
     for i in range(1, partTorsion):
         _skeletonJointLen, torsionP = lenPartSK(skeleton[joint:, :], i/partTorsion)
-        j = joint+torsionP*i
+        j = joint+torsionP
         partSK[i,:] = skeleton[j,:]
     partSK[-1, :] = skeleton[-1, :]
     
@@ -152,7 +152,7 @@ def computeGamma(skeleton, joint):
         dotProduct = ((partSK[i-1, 0]-partSK[i, 0])*(partSK[i+1, 0]-partSK[i, 0]) + (partSK[i-1, 1]-partSK[i, 1])*(partSK[i+1, 1]-partSK[i, 1]))
         cosAlpha = dotProduct / normProduct
         if np.abs(cosAlpha) > 1:
-            print(cosAlpha)
+            cosAlpha = int(cosAlpha) #np.mod(cosAlpha,1)
         alpha = np.arccos(cosAlpha)
         if alpha < minT:
             minT = alpha
@@ -164,16 +164,15 @@ def computeGamma(skeleton, joint):
 def exportData(ind, tailP, headP, jointP, beta, ampl, gamma, torsionP, exportPath, expID, nValidFrames):
 
     # Export all the data in a cvs file
-    dataHeader = "Time(ms), x_Tail, y_Tail, x_Head, y_Head, x_Joint, y_Joint, Amplitude(px), TailAngleBeta(dg), x_Torsion, y_Torsion, TorsionAngleGamma(dg)"
-    data = np.transpose([ind[:nValidFrames], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], headP[:nValidFrames, 0],
-                         headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1], ampl, beta, torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], gamma[:nValidFrames]])
+    dataHeader = "Time(ms), x_Head, y_Head, x_Joint, y_Joint, x_Torsion, y_Torsion, x_Tail, y_Tail, Amplitude(px), TailAngleBeta(dg), TorsionAngleGamma(dg)"
+    data = np.transpose([ind[:nValidFrames], headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1], torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], ampl, beta,  gamma[:nValidFrames]])
     np.savetxt(pathlib.Path(exportPath,expID,expID + ".csv"), data, fmt="%10.5f",
                delimiter=',', header=dataHeader, comments="")
 
     # Export all the data in npy files to show faster in showData
-    np.save(pathlib.Path(exportPath,expID,"counts", expID + "_ind"), ind[:nValidFrames])
-    np.save(pathlib.Path(exportPath, expID, "counts", expID + "_amp"), ampl)
-    np.save(pathlib.Path(exportPath,expID, "counts", expID + "_beta"), beta)
+    np.save(pathlib.Path(exportPath,expID,"data", expID + "_ind"), ind[:nValidFrames])
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_amp"), ampl)
+    np.save(pathlib.Path(exportPath,expID, "data", expID + "_beta"), beta)
 
 
 if (__name__ == "__main__"):
