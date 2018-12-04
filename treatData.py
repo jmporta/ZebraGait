@@ -173,6 +173,7 @@ def exportData(ind, tailP, headP, jointP, beta, ampl, gamma, torsionP, exportPat
     np.save(pathlib.Path(exportPath,expID,"data", expID + "_ind"), ind[:nValidFrames])
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_amp"), ampl)
     np.save(pathlib.Path(exportPath,expID, "data", expID + "_beta"), beta)
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_gamma"), gamma[:nValidFrames])
 
 
 if (__name__ == "__main__"):

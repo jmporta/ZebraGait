@@ -34,10 +34,10 @@ class mainWindow:
 
         # WINDOW PROPERTIES
 
-        defaultName = "ExpID"
-        defaultVid = "./video/fishbo.avi"
-        defaultSaveVid = "/home/avalls/Desktop/ResultsACR"
-        defaultFrames = "1000"
+        self.defaultName = "ExpID"
+        self.defaultVid = "./video/fishTest.avi"
+        self.defaultSaveVid = "./export/"
+        self.defaultFrames = "1000"
 
         # Main window
         self.master=master
@@ -58,7 +58,7 @@ class mainWindow:
         self.lblPath =  tk.Label(self.mainFrame, text="Video path:")
         self.lblPath.grid(column=0, row=0, sticky=tk.W, padx=10, pady=5)
 
-        self.defaultPath = tk.StringVar(self.mainFrame, value=defaultVid)
+        self.defaultPath = tk.StringVar(self.mainFrame, value=self.defaultVid)
         self.txtPath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
         self.txtPath.grid(column=1, row=0, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
@@ -69,7 +69,7 @@ class mainWindow:
         self.lblVidId =  tk.Label(self.mainFrame, text="ExperimentID:")
         self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=10, pady=5)
 
-        self.defaultID = tk.StringVar(self.mainFrame, value=defaultName)
+        self.defaultID = tk.StringVar(self.mainFrame, value=self.defaultName)
         self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID)
         self.txtVidId.grid(column=1, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
@@ -77,7 +77,7 @@ class mainWindow:
         self.lblVidFps =  tk.Label(self.mainFrame, text="Video Fps:")
         self.lblVidFps.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 
-        self.defaultFps = tk.StringVar(self.mainFrame, value=defaultFrames)
+        self.defaultFps = tk.StringVar(self.mainFrame, value=self.defaultFrames)
         self.txtVidFps =  tk.Entry(self.mainFrame, width=5, textvariable=self.defaultFps)
         self.txtVidFps.grid(column=3, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
@@ -85,7 +85,7 @@ class mainWindow:
         self.lblSavePath =  tk.Label(self.mainFrame, text="Save path:")
         self.lblSavePath.grid(column=0, row=2, sticky=tk.W, padx=10, pady=5)
 
-        self.defaultSavePath = tk.StringVar(self.mainFrame, value=defaultSaveVid)
+        self.defaultSavePath = tk.StringVar(self.mainFrame, value=self.defaultSaveVid)
         self.txtSavePath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultSavePath)
         self.txtSavePath.grid(column=1, row=2, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
@@ -131,7 +131,7 @@ class mainWindow:
         try:
             videoPath = self.txtPath.get()
             expID = self.txtVidId.get()
-            if expID == "ExpID":
+            if expID == self.defaultName:
                 expID = pathlib.Path(videoPath).stem
 
             fps = int(self.txtVidFps.get())
@@ -159,7 +159,7 @@ class mainWindow:
             videoPath = self.txtPath.get()
             importPath = self.txtSavePath.get()
             expID = self.txtVidId.get()
-            if expID == "ExpID":
+            if expID == self.defaultName:
                 expID = pathlib.Path(videoPath).stem
             fps = int(self.txtVidFps.get())
             ind, beta, videoPathR = showData(importPath, expID, fps, gui=True)
