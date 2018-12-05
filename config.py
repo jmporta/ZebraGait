@@ -2,7 +2,7 @@
 
 LOGS_PATH = "./logs/"  # Path to save the log files
 
-CONTRAST = 155/100 # Value of the contrast
+CONTRAST = 210/100 # Value of the contrast
 
 PARTITION_JOINT = 1/3  # Length proportion of the headP-HeadPe
 

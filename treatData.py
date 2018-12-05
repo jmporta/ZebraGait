@@ -5,9 +5,9 @@ import os
 import numpy as np
 from scipy import interpolate
 
-# Debug Only: draw approx
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+# # Debug Only: draw approx
+# import matplotlib.pyplot as plt
+# import matplotlib.animation as animation
 
 import config
 
@@ -40,7 +40,6 @@ def importData(filePath, expID, partJoint, nFiles):
     ind = np.zeros((nFiles), int)
     gamma = np.zeros((nFiles),float)
     torsionP = np.zeros((nFiles, 2), int)
-    skeleton = np.zeros((1, 2), int)
     tailP = np.zeros((nFiles, 2), int)
     headP = np.zeros((nFiles, 2), int)
     jointP = np.zeros((nFiles, 2), int)
@@ -50,7 +49,7 @@ def importData(filePath, expID, partJoint, nFiles):
     # fig = plt.figure()
 
     # Export/Extract the data from the files
-    k = 0 # valid frames index
+    validInd = 0 # valid frames index
     for i in range(nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
@@ -61,36 +60,51 @@ def importData(filePath, expID, partJoint, nFiles):
             skeleton = np.reshape(skeleton, (np.size(skeleton, 0), 2)) # convert the array-points to a matrix
             skeleton = skeleton[np.argsort(skeleton[:, 0])] # sort points by x
             skeleton = np.unique(skeleton, axis=0) # delete repeated points
+            skeleton = uniqueMean(skeleton) # delete repeated points_x and get the mean_y
             skeleton[:, 1] = -skeleton[:, 1] # convert coords. to R^2 (original ones are image matrix indicies)
 
             # Skeleton pretreatmeant
             _skeletonLen, joint = lenPartSK(skeleton, partJoint)
-            gamma[k], torsionP[k,:], _PART = computeGamma(skeleton, joint)
+            gamma[validInd], torsionP[validInd,:], _PART = computeGamma(skeleton, joint)
 
             # Save points- Fish direction swimming: left
-            ind[k] = i
-            tailP[k, :] = skeleton[-1, :]
-            headP[k, :] = skeleton[0, :]
-            jointP[k, :] = skeleton[joint, :]
+            ind[validInd] = i
+            tailP[validInd, :] = skeleton[-1, :]
+            headP[validInd, :] = skeleton[0, :]
+            jointP[validInd, :] = skeleton[joint, :]
             # Update the valid index
-            k += 1
+            validInd += 1
             
             
             # # Debug Only: draw approx
             # x = skeleton[:, 0]
             # y = skeleton[:, 1]
             # plot1 = plt.figure(1)
-            # plt.plot(x, y, 'b.')
+            # plt.plot(x, y, 'b-')
             # plt.plot(x[joint],y[joint],'go')
-            # plt.plot(torsionP[k-1,0],torsionP[k-1,1],'r*')  
+            # plt.plot(torsionP[validInd-1,0],torsionP[validInd-1,1],'r*')  
             # plt.plot(PART[:,0],PART[:,1],'y+')
-            # plt.axis((50, 476.7, -154, -50))
+            # plt.axis((0, 426.7, -154, -50))
             # # Update canvas
             # fig.canvas.draw()
             # plot1.clf()
             
 
-    return ind, tailP, headP, jointP, k, gamma, torsionP
+    return ind, tailP, headP, jointP, validInd, gamma, torsionP
+
+def uniqueMean(skeleton):
+
+    skmean = np.array([], int).reshape(0,2)
+
+    _sk, skind, skcounts = np.unique(skeleton[:,0],return_index=True,return_counts=True)
+
+    for i,ind in enumerate(skind):
+        ymean = 0
+        for j in range(skcounts[i]):
+            ymean = ymean + skeleton[ind+j, 1]
+        skmean = np.vstack([skmean,[skeleton[i,0], int(ymean/skcounts[i])]])
+
+    return skmean
 
 def computeBeta(tailP, headP, jointP, nValidFrames):
 
@@ -158,7 +172,6 @@ def computeGamma(skeleton, joint):
             minT = alpha
             k = i
 
-    # print(np.rad2deg(minT))
     return np.rad2deg(minT), partSK[k, :], partSK
 
 def exportData(ind, tailP, headP, jointP, beta, ampl, gamma, torsionP, exportPath, expID, nValidFrames):
@@ -188,7 +201,7 @@ if (__name__ == "__main__"):
     fps = 1000
 
     try:
-        treatData(exportPath, expID, fps)
+         treatData(exportPath, expID, fps)
     except Exception as err:
         logging.error(err)
     

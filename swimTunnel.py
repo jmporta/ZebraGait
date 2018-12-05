@@ -341,7 +341,7 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/fishTest.avi"
+    videoPath = "./video/ACR2_3BL_C001H001S0001.avi"
     expID = "TestFish"
     exportPath = "./export/"
 
