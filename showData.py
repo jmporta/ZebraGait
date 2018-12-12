@@ -6,7 +6,6 @@ import config
 
 def showData(exportPath, expID, fps, gui=False):
 
-
     # Import data
     ind, beta, = importMesures(exportPath, expID)
 

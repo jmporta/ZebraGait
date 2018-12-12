@@ -3,8 +3,7 @@ import numpy as np
  
 window_name = "ThresholdTest"
 
-cap = cv.VideoCapture(
-    "/home/avalls/Desktop/VideosACR/ACR2/ACR2_3BL_C001H001S0001.avi")
+cap = cv.VideoCapture("./video/fishTest.avi")
 _ret, src =cap.read()
 
 # Choose ROI
@@ -44,6 +43,7 @@ cv.createTrackbar("Brightness", window_name , 0, 100, Threshold)
 
 # Call the function to initialize
 Threshold(0)
+
 
 # Wait until user finishes program
 cv.waitKey(0)

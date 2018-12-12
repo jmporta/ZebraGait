@@ -36,7 +36,7 @@ class mainWindow:
 
         self.defaultName = "ExpID"
         self.defaultVid = "./video/fishTest.avi"
-        self.defaultSaveVid = "./export/"
+        self.defaultSaveVid = "/home/avalls/Desktop/Results" #"./export/"
         self.defaultFrames = "1000"
 
         # Main window
@@ -174,7 +174,7 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = "/home/avalls/Desktop/VideosACR" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
+        iniPath = "/home/avalls/Desktop/03Dec" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
         filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
             self.txtPath.delete(0, tk.END)
@@ -183,7 +183,6 @@ class mainWindow:
     def clickSavePath(self):
         iniSavePath = str(pathlib.Path.home()) 
         fileSavePath = tk.filedialog.askdirectory(initialdir=iniSavePath, title="Select folder to save")
-        print(fileSavePath)
         if fileSavePath != () and fileSavePath !="":
             self.txtSavePath.delete(0, tk.END)
             self.txtSavePath.insert(0, fileSavePath)

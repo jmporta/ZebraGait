@@ -17,7 +17,7 @@ BLUE = (255, 0, 0,)
 def swimTunnel(videoPath, exportPath, expID, fps):
 
     # Init. Data
-    contrast = config.CONTRAST
+    defaultContrast = config.DEFAULT_CONTRAST
     fAreaMin = config.FISH_AREA_MIN
     fAreaMax = config.FISH_AREA_MAX
     bAreaMin = config.BOX_AREA_MIN
@@ -39,15 +39,16 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     fishContoursPrev = np.zeros((1,2), int)
     numFrame = 0
     failFrames = 0
-    matchContour = 1.0
+    matchContour = 1.0 # index of ressemblance
+    borderWidth = 0 # width of the blank blob border
 
-    # First video loop. Define a smaller image movement subset and crop.
-    # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob
-    totalFrames, (mbx, mby, mbw, mbh) = getMainBox(videoPath, contrast, bAreaMin, bAreaMax)
+    # First video loop. Define a smaller image movement subset and crop it. Choose the ROI and the contrast.
+    # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob and to save computations.
+    totalFrames, contrast, (mbx, mby, mbw, mbh) = getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax)
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw, mbh))
+    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw + 2*borderWidth, mbh + 2*borderWidth))
 
     # Read the first frame for second video walk
     _, frame = vid.read()
@@ -60,12 +61,14 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
         # Step1 -- Crop the main movement box
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
+        # Add a solid border to avoid blob border fusion
+        #frame = cv.copyMakeBorder(frame, borderWidth, borderWidth, borderWidth, borderWidth, cv.BORDER_CONSTANT, None, WHITE)
         originalFrame = frame
-        
+
         # Step2 -- PreProcess the image
         frame = preprocess(frame, contrast, True, True)
         
-        # Step3 -- Fish contour and skeleton detection
+        # Step3 -- Fish contour and fish skeleton detection
         fishContours = getFishContours(frame, fAreaMin, fAreaMax)
         fishSkeleton = getFishSkeleton(frame)
 
@@ -158,10 +161,10 @@ def getMovementBox(frame):
 
     return np.array([mx, my, mw, mh], int)
 
-def getMainBox(videoPath, contrast, bAreaMin, bAreaMax):
+def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
     totalFrames = 0
-    layer = 10 # secure layer in pixels
+    layer = 10 # layer/border in pixels
 
     # Open the video in a VideoCapture object
     backVid = cv.VideoCapture(videoPath)
@@ -176,9 +179,10 @@ def getMainBox(videoPath, contrast, bAreaMin, bAreaMax):
     # Read the first frame to select the area to track
     _, backFrame = backVid.read()
 
-    # Select the region of interest
+    # Select the region of interest and the contrast
     (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
     cv.destroyAllWindows()
+    contrast = getContrast(defaultContrast, backFrame[ry:(ry+rh), rx:(rx+rw)])
 
     # Init. main box of the union
     (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
@@ -219,7 +223,7 @@ def getMainBox(videoPath, contrast, bAreaMin, bAreaMax):
     logging.info("Movement domain defined.")
     backVid.release()
     
-    # Add a secure layer (smaller than ROI)
+    # Add a secure border layer (smaller than ROI)
     if mbx-layer > 0:
         mbx = mbx-layer
         mbw = mbw+layer
@@ -231,11 +235,35 @@ def getMainBox(videoPath, contrast, bAreaMin, bAreaMax):
     if mby+mbh+layer < rh:
         mbh = mbh+layer
 
-    # Change coords to original image basis (ROI + MB)
+    # Change coords to original image basis (MB+ROI)
     mbx = mbx + rx
     mby = mby + ry
 
-    return totalFrames, np.array([mbx,mby,mbw,mbh], int)
+    return totalFrames, contrast, np.array([mbx,mby,mbw,mbh], int)
+
+def getContrast(defaultContrast, frame):
+
+    windowsName = "Choose Contrast"
+    cv.namedWindow(windowsName)
+    
+    def ContrastBar(val):
+        alpha = cv.getTrackbarPos("Contrast", windowsName)
+        res = cv.convertScaleAbs(frame, alpha=(alpha/100))
+        cv.imshow(windowsName, res)
+        return alpha
+
+    # Create Trackbar to choose contrast value
+    cv.createTrackbar("Contrast", windowsName, int(defaultContrast*100), 300, ContrastBar)
+
+    # Call the function to initialize
+    ContrastBar(0)
+
+    # Wait until user finishes the selection
+    cv.waitKey(0)
+    alpha = cv.getTrackbarPos("Contrast", windowsName)
+    cv.destroyAllWindows()
+
+    return alpha/100
 
 def preprocess(frame, contrast, blur, threshold):
 
@@ -309,7 +337,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
 def getFishSkeleton(frame):
 
     # Find the skeleton through Zhang-Suen thinning 
-    frame = cv.ximgproc.thinning(frame, 0)
+    frame = cv.ximgproc.thinning(frame, thinningType=cv.ximgproc.THINNING_ZHANGSUEN)
     
     # Find the Skeleton
     _ret, contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
@@ -341,14 +369,14 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/ACR2_3BL_C001H001S0001.avi"
+    videoPath = "./video/fishTest.avi"
     expID = "TestFish"
     exportPath = "./export/"
 
-    try:
-        _failedFrames = swimTunnel(videoPath, exportPath, expID, fps)
-    except Exception as err:
-        logging.error(err)
+    # try:
+    _failedFrames = swimTunnel(videoPath, exportPath, expID, fps)
+    # except Exception as err:
+    #     logging.error(err)
     
     
     logging.info("DONE.")

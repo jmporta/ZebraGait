@@ -22,6 +22,8 @@ CV - Movement detection/description of a fish in a swim-tunnel.
     ```
 
 ## TODO
-
+    - Mean skeleton: if not repeated x, no uniqueMean
+    - White layer (black if blob)
+    - Kill Branches (mean it is worst in case of big noise)
 
 ## Known bugs
