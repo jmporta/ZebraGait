@@ -1,12 +1,14 @@
 import logging
 import pathlib
 import os
+import csv
 
 import numpy as np
+from scipy.interpolate import CubicSpline
 
-# # Debug Only: draw approx
-# import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
+# Debug Only: draw 
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 import config
 
@@ -29,14 +31,21 @@ def treatData(exportPath, expID, fps):
 
     # Compute data
     logging.info("Computing Data...")
-    beta, ampl = computeAngle(headP, jointP, tailP, nValidFrames)
+    alpha, _amplalpha = computeAngle(headP, jointP, torsionP, nValidFrames)
+    beta, _amplbeta = computeAngle(headP, jointP, tailP, nValidFrames)
     gamma, _amplgamma = computeAngle(jointP, torsionP, tailP, nValidFrames)
-    
+
     ind[:nValidFrames] = (nFiles/fps)*ind[:nValidFrames] # time in ms
+
+    dataAlpha = angleData(ind, alpha)
+    dataBeta = angleData(ind, beta)
+    dataGamma =  angleData(ind, gamma)
+
+    aData = np.array([dataAlpha, dataBeta,dataGamma], float)
 
     # Export data
     logging.info("Exporting Data...")
-    exportData(ind, tailP, headP, jointP, beta, ampl, gamma, torsionP, exportPath, expID, nValidFrames)
+    exportData(ind, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames)
 
     logging.info("Treatment DONE.")
 
@@ -49,7 +58,7 @@ def importData(filePath, expID, proportionJoint, proportionTorsion, nFiles):
     jointP = np.zeros((nFiles, 2), int)
     torsionP = np.zeros((nFiles, 2), int)
 
-    # # Debug Only: Start interactive fig
+    # # Debug Only: Start interactive fig to plot skeleton and partition
     # plt.ion()
     # fig = plt.figure()
 
@@ -152,16 +161,60 @@ def lenSK(skeleton, proportion):
 
     return skeletonLen, point
 
-def exportData(ind, tailP, headP, jointP, beta, ampl, gamma, torsionP, exportPath, expID, nValidFrames):
+def angleData(time, angle):
+
+    # Define interp. points
+    x = time[0:-1:25]
+    x = np.append(x,[time[-1]])
+    y = angle[0:-1:25]
+    y = np.append(y,[angle[-1]])
+
+    # Compute the splines and the interest pts
+    cs = CubicSpline(x, y)
+    rootsd = cs.derivative().roots() 
+
+    # Compute mean data
+    amp = np.zeros(len(rootsd)-1, float)
+    for i in range(1,len(rootsd)):
+        amp[i-1] = np.abs(cs(rootsd[i])-cs(rootsd[i-1]))/2
+    
+    meanAmp = np.mean(amp)
+    freq = (int((len(rootsd)-1)/2) * 1000)/time[-1]
+
+    # Debug Only: draw interp. and points
+    plt.figure(1)
+    xs = np.linspace(x[0], x[-1], 1000, endpoint=True)
+    plt.plot(time, angle, "C7.", alpha=0.25,label="Raw Data")
+    plt.plot(x, y, "C1*", label="Inter. Pts")
+    plt.plot(xs, cs(xs), "C0", label="CS approx.")
+    plt.plot(rootsd, cs(rootsd), "C3o", alpha=0.5, label="Relative Pts")
+    plt.legend(loc="lower left", ncol=2)
+    plt.grid()
+    plt.show()
+
+    return meanAmp, freq
+
+def exportData(ind, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames):
 
     # Export all the data in a cvs file
-    dataHeader = "Time(ms), x_Head, y_Head, x_Joint, y_Joint, x_Torsion, y_Torsion, x_Tail, y_Tail, Amplitude(px), TailAngleBeta(dg), TorsionAngleGamma(dg)"
-    data = np.transpose([ind[:nValidFrames], headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1], torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], ampl, beta, gamma])
+    dataHeader = "Time(ms), x_Head, y_Head, x_Joint, y_Joint, x_Torsion, y_Torsion, x_Tail, y_Tail, AngleAlpha(dg), AngleBeta(dg), AngleGamma(dg)"
+    data = np.transpose([ind[:nValidFrames], headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1],
+                         torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], alpha, beta, gamma])
     np.savetxt(pathlib.Path(exportPath,expID,expID + ".csv"), data, fmt="%10.5f", delimiter=',', header=dataHeader, comments="")
-    # Export all the data in npy files to show faster in showData
-    np.save(pathlib.Path(exportPath,expID,"data", expID + "_ind"), ind[:nValidFrames])
-    np.save(pathlib.Path(exportPath, expID, "data", expID + "_amp"), ampl)
-    np.save(pathlib.Path(exportPath,expID, "data", expID + "_beta"), beta)
+    
+    # Append the global data to the csv file
+    with open(pathlib.Path(exportPath, expID, expID + ".csv"), 'a') as f:
+        w = csv.writer(f)
+        w.writerow([None])
+        w.writerow([None, "MeanAmp", "Freq(Hz)"])
+        w.writerow(["Alpha", aData[0, 0], aData[0, 1]])
+        w.writerow(["Beta", aData[1, 0], aData[1, 1]])
+        w.writerow(["Gamma", aData[2, 0], aData[2, 1]])
+
+    # Export the data in npy files to show faster in showData
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_ind"), ind[:nValidFrames])
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_alpha"), alpha)
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_beta"), beta)
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_gamma"), gamma)
 
 
@@ -176,9 +229,6 @@ if (__name__ == "__main__"):
     expID = "TestFish"
     fps = 1000
 
-    # try:
     treatData(exportPath, expID, fps)
-    # except Exception as err:
-    #     logging.error(err)
     
     logging.info("DONE.")

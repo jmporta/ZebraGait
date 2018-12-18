@@ -22,8 +22,11 @@ CV - Movement detection/description of a fish in a swim-tunnel.
     ```
 
 ## TODO
-    - Mean skeleton: if not repeated x, no uniqueMean
-    - White layer (black if blob)
-    - Kill Branches (mean it is worst in case of big noise)
+
+- Mean skeleton: if not repeated x, no uniqueMean.
+- Besides of the percentage of falied frames, add a control of consecutive failed frames.
+- Automatize the compute of freq, period, mean ampl, etc...
+- Delete the ExperimentID field.
+- Able to kill the process.
 
 ## Known bugs

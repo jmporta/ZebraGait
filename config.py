@@ -2,7 +2,7 @@
 
 LOGS_PATH = "./logs/"  # Path to save the log files
 
-DEFAULT_CONTRAST = 1.55 # Default value of the contrast [0.,3.]
+DEFAULT_CONTRAST = 1.00 # Default value of the contrast [0.,3.]
 
 PROPORTION_JOINT = 1/3  # Length proportion of the headP-JointP
 PROPORTION_TORSION = 1/2

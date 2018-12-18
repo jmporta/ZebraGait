@@ -23,7 +23,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     bAreaMin = config.BOX_AREA_MIN
     bAreaMax = config.BOX_AREA_MAX
 
-    videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside its functions
+    videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside his functions
 
     # Check/Create paths
     pathlib.Path(exportPath, expID, "skeleton").mkdir(parents=True, exist_ok=True)
@@ -32,18 +32,18 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     vid = cv.VideoCapture(videoPath)
     
     # Check if the video object has opened the reference
-    if (not vid.isOpened()):
+    if not vid.isOpened():
+        vid.release()
         raise Exception("Could not open the video reference: " + videoPath)
 
     # Define main objects
     fishContoursPrev = np.zeros((1,2), int)
     numFrame = 0
     failFrames = 0
-    matchContour = 1.0 # index of ressemblance
-    borderWidth = 0 # width of the blank blob border
+    borderWidth = 10 # width of the blank blob border
 
     # First video loop. Define a smaller image movement subset and crop it. Choose the ROI and the contrast.
-    # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob and to save computations.
+    # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob and to save computations in each step.
     totalFrames, contrast, (mbx, mby, mbw, mbh) = getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax)
 
     # Open the save video object
@@ -51,46 +51,41 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw + 2*borderWidth, mbh + 2*borderWidth))
 
     # Read the first frame for second video walk
-    _, frame = vid.read()
+    _ret, frame = vid.read()
 
     # Second video loop to find the skeleton and its data
     logging.info("Extracting data...")
 
-    while (frame is not None):
+    while frame is not None:
         numFrame += 1
 
-        # Step1 -- Crop the main movement box
+        # Step1 -- Initial crops/adds
+
+        # Crop the main movement box
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
         # Add a solid border to avoid blob border fusion
-        #frame = cv.copyMakeBorder(frame, borderWidth, borderWidth, borderWidth, borderWidth, cv.BORDER_CONSTANT, None, WHITE)
+        frame = cv.copyMakeBorder(frame, borderWidth, borderWidth, borderWidth, borderWidth, cv.BORDER_CONSTANT, None, WHITE)
+        # Pointer copy of frame without changes
         originalFrame = frame
 
         # Step2 -- PreProcess the image
+
         frame = preprocess(frame, contrast, True, True)
-        
+
         # Step3 -- Fish contour and fish skeleton detection
+
         fishContours = getFishContours(frame, fAreaMin, fAreaMax)
         fishSkeleton = getFishSkeleton(frame)
+        (fx, fy, fw, fh) = cv.boundingRect(fishContours)  # fish contour rectangle
 
         # Step4 -- Validate and Show/Save the results
 
         # First frame condition
-        if (numFrame == 1):
+        if numFrame == 1:
             fishContoursPrev = fishContours
-
-        # Check the previous countour shape
-        skeletonBelong = True
-        matchContour = cv.matchShapes(fishContours, fishContoursPrev, 3, 0.0)
         
-        # Check if the fish boundary contains the fish skeleton
-        (fx, fy, fw, fh) = cv.boundingRect(fishContours)
-        for i in range(np.size(fishSkeleton,0)):
-            if (not ((fx<fishSkeleton[i][0,0]<(fx+fw)) and (fy<fishSkeleton[i][0,1]<(fy+fh)))):
-                skeletonBelong = False
-                break
-
-        # Check the frame and save the results
-        if ((matchContour < 0.1) and (skeletonBelong)):
+        # Check the the conditions and save the results
+        if checkFrame(fishSkeleton, fishContours, fishContoursPrev):
             # Export Results
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=True)
 
@@ -110,7 +105,9 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=False)
 
             # Check the fail proportion
-            if (failFrames >= 10 * totalFrames /100):
+            if failFrames >= 10*totalFrames/100:
+                vid.release()
+                cv.destroyAllWindows()
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
 
             # DebugOnly: Show results
@@ -122,7 +119,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
-        _, frame = vid.read()
+        _ret, frame = vid.read()
 
     # Clean
     vid.release()
@@ -151,7 +148,7 @@ def getMovementBox(frame):
     _ret, contours, _hier= cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # Join the contours in one
-    if (np.size(contours) == 0):
+    if np.size(contours) == 0:
         (mx, my, mw, mh) = (0, 0, 0, 0)
     else:
         joinedContours = contours[0]
@@ -164,20 +161,21 @@ def getMovementBox(frame):
 def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
     totalFrames = 0
-    layer = 10 # layer/border in pixels
+    layer = 10 # secure layer/border in pixels
 
     # Open the video in a VideoCapture object
     backVid = cv.VideoCapture(videoPath)
 
     # Check if the video object has opened the reference
-    if (not backVid.isOpened()):
+    if not backVid.isOpened():
+        backVid.release()
         raise Exception("Could not open the video reference: " + videoPath)
 
     # Create Background Subtractor object
     pMOG2 = cv.createBackgroundSubtractorMOG2(history=0, detectShadows=False)
 
     # Read the first frame to select the area to track
-    _, backFrame = backVid.read()
+    _ret, backFrame = backVid.read()
 
     # Select the region of interest and the contrast
     (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
@@ -185,11 +183,11 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
     contrast = getContrast(defaultContrast, backFrame[ry:(ry+rh), rx:(rx+rw)])
 
     # Init. main box of the union
-    (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1),-np.size(backFrame, 0), -np.size(backFrame, 1))
+    (mbx, mby, mbw, mbh) = (np.size(backFrame, 0), np.size(backFrame, 1), -np.size(backFrame, 0), -np.size(backFrame, 1))
 
     # First loop to detect the movement domain and the total number of frames
     logging.info("Detecting the movement domain...")
-    while(backFrame is not None):
+    while backFrame is not None:
         
         totalFrames += 1
 
@@ -203,7 +201,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
         (mx, my, mw, mh) = getMovementBox(backFrame)
 
         # Step3 -- Join the boxes ommiting the limit ones
-        if ((mw*mh > bAreaMin) and (mw*mh < bAreaMax)):
+        if (mw*mh > bAreaMin) and (mw*mh < bAreaMax):
             x = min(mx, mbx)
             y = min(my, mby)
             w = max(mx+mw, mbx+mbw) - x
@@ -218,7 +216,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
         cv.waitKey(1)
 
         # Update the frame
-        _, backFrame = backVid.read()
+        _ret, backFrame = backVid.read()
 
     logging.info("Movement domain defined.")
     backVid.release()
@@ -278,16 +276,16 @@ def preprocess(frame, contrast, blur, threshold):
     frame = cv.normalize(frame, None, 0, 255, cv.NORM_MINMAX)
     frame = cv.convertScaleAbs(frame, alpha=contrast, beta=0)
 
-    if (blur):
+    if blur:
         # Clean Noise
         frame = cv.GaussianBlur(frame, (5, 5), 0, 0)
         frame = cv.medianBlur(frame,7)
 
-    if (threshold):
+    if threshold:
         # Threshold
         _ret, frame = cv.threshold(frame, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
      
-        # Dilate one time the image for a better edges detection
+        # Dilate and close the image for a better edges detection
         morphSize = 2
         element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*morphSize+1, 2*morphSize+1), (morphSize, morphSize))
         frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element, iterations=2)
@@ -317,7 +315,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
     for i in range(np.size(contours, 0)):
 
         area = cv.contourArea(contours[i])
-        if (area > fAreaMin and area < fAreaMax):
+        if (area > fAreaMin) and (area < fAreaMax):
             iFishContour = i
     
     # # DebugOnly: Draw fish
@@ -346,11 +344,33 @@ def getFishSkeleton(frame):
     maxLen = 0
     for i in range(np.size(contours,0)):
         length = cv.arcLength(contours[i], False)
-        if (length > maxLen):
+        if length > maxLen:
             maxLen = length
             iFishSkeleton = i
 
     return contours[iFishSkeleton]
+
+def checkFrame(fishSkeleton,fishContours, fishContoursPrev):
+
+     # Check the ressemblance of the blob detected fish shape in the previous frame
+    if cv.matchShapes(fishContours, fishContoursPrev, 3, 0.0) > 0.1:
+        return False
+
+    # Check if the fish rect. boundary contains the fish skeleton
+    (fx, fy, fw, fh) = cv.boundingRect(fishContours)
+    for i in range(np.size(fishSkeleton, 0)):
+        if (not ((fx < fishSkeleton[i][0, 0] < (fx+fw)) and (fy < fishSkeleton[i][0, 1] < (fy+fh)))):
+            return False
+    
+    # Check if the skeleton contains branches
+    fishSkeleton = np.reshape(fishSkeleton, (np.size(fishSkeleton, 0), 2))  # convert the array-points to a matrix
+    fishSkeleton = fishSkeleton[np.argsort(fishSkeleton[:, 0])]  # sort points by x
+
+    for i in range(1, len(fishSkeleton)):
+        if (fishSkeleton[i-1, 0] == fishSkeleton[i, 0]) and (np.abs(fishSkeleton[i-1, 1]-fishSkeleton[i, 1])>3):
+            return False
+    
+    return True
 
 def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 

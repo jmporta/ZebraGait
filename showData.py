@@ -1,6 +1,6 @@
 import pathlib
 import numpy as np
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 
 import config
 
@@ -27,16 +27,15 @@ def plotGraphs(ind, beta):
 
 
     # Plot the Tail-Angle beta
-    pl.figure(1)
-    #x = np.arange(0, np.size(beta, 0))
-    pl.plot(ind, beta, "r", linewidth=0.5)
-    pl.plot(np.zeros(np.size(ind)), 'b--', linewidth=0.5)
-    pl.suptitle("Angle between the tail and the head perpendicular (beta)")
-    pl.ylabel("Tail angle (rad)")
-    pl.xlabel("Frame")
+    plt.figure(1)
+    plt.plot(ind, beta, "r", linewidth=0.5)
+    plt.plot(np.zeros(np.size(ind)), 'b--', linewidth=0.5)
+    plt.suptitle("Angle between the tail and the head perpendicular (beta)")
+    plt.ylabel("Tail angle (deg)")
+    plt.xlabel("ms")
 
     # Show Plots
-    pl.show()
+    plt.show()
 
 if (__name__ == "__main__"):
 

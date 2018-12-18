@@ -15,7 +15,7 @@ import cv2 as cv
 # Import matplotlib Agg buffer prepared to threading/embedding on tkinter
 import matplotlib
 matplotlib.use("Agg") 
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 # Import own libs
@@ -34,7 +34,7 @@ class mainWindow:
 
         # WINDOW PROPERTIES
 
-        self.defaultName = "ExpID"
+        self.defaultName = "{Default: videoName}"
         self.defaultVid = "./video/fishTest.avi"
         self.defaultSaveVid = "/home/avalls/Desktop/Results" #"./export/"
         self.defaultFrames = "1000"
@@ -174,7 +174,7 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = "/home/avalls/Desktop/03Dec" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
+        iniPath = "/home/avalls/Desktop/13Dec" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
         filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
             self.txtPath.delete(0, tk.END)
@@ -261,13 +261,13 @@ class showWindow:
         # Figure
         self.beta = beta
         self.x = ind
-        self.fig = pl.figure(figsize=(6, 4), dpi=100)
-        pl.title("Angle between the tail and the head perpendicular (beta)")
-        pl.xlabel("Frame")
-        pl.ylabel("beta (dg)")
-        self.betaFig, = pl.plot(self.x, self.beta, "r", linewidth=0.5)
-        self.lineFig, = pl.plot(np.zeros(np.size(self.x)), 'b--', linewidth=0.5)
-        self.pointDraw, = pl.plot(self.x[0], self.beta[0], "bo")
+        self.fig = plt.figure(figsize=(6, 4), dpi=100)
+        plt.title("Angle between the tail and the head perpendicular (beta)")
+        plt.xlabel("Frame")
+        plt.ylabel("beta (dg)")
+        self.betaFig, = plt.plot(self.x, self.beta, "r", linewidth=0.5)
+        self.lineFig, = plt.plot(np.zeros(np.size(self.x)), 'b--', linewidth=0.5)
+        self.pointDraw, = plt.plot(self.x[0], self.beta[0], "bo")
         # Canvas object for plot
         self.canvasPlot = FigureCanvasTkAgg(self.fig, self.master)
         self.canvasPlotArea = self.canvasPlot.get_tk_widget()  # Draw figures
