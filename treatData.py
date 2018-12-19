@@ -35,17 +35,17 @@ def treatData(exportPath, expID, fps):
     beta, _amplbeta = computeAngle(headP, jointP, tailP, nValidFrames)
     gamma, _amplgamma = computeAngle(jointP, torsionP, tailP, nValidFrames)
 
-    ind[:nValidFrames] = (nFiles/fps)*ind[:nValidFrames] # time in ms
+    time = (nFiles/fps)*ind[:nValidFrames] # time in ms
 
-    dataAlpha = angleData(ind, alpha)
-    dataBeta = angleData(ind, beta)
-    dataGamma =  angleData(ind, gamma)
+    dataAlpha = angleData(time, alpha)
+    dataBeta = angleData(time, beta)
+    dataGamma =  angleData(time, gamma)
 
     aData = np.array([dataAlpha, dataBeta,dataGamma], float)
 
     # Export data
     logging.info("Exporting Data...")
-    exportData(ind, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames)
+    exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames)
 
     logging.info("Treatment DONE.")
 
@@ -163,42 +163,88 @@ def lenSK(skeleton, proportion):
 
 def angleData(time, angle):
 
-    # Define interp. points
-    x = time[0:-1:25]
-    x = np.append(x,[time[-1]])
-    y = angle[0:-1:25]
-    y = np.append(y,[angle[-1]])
+    # Init. data
+    interpPart = 10
+    noiseDist = 1.5*interpPart
+    kerPts = 5
 
-    # Compute the splines and the interest pts
+    # Smooth angle data
+    ker = np.ones(kerPts)/kerPts
+    smoothAngle = np.convolve(angle, ker, mode='same')
+    
+    # Define interp. points
+    x = time[0:-1:interpPart]
+    x = np.append(x,[time[-1]])
+    y = smoothAngle[0:-1:interpPart]
+    y = np.append(y,[smoothAngle[-1]])
+
+    # Compute the splines and its relative points
     cs = CubicSpline(x, y)
     rootsd = cs.derivative().roots() 
 
+    # Filter roots
+    relativeP = []
+    noiseP = []
+
+    if (rootsd[0] >= x[0]): # first root
+        if (np.abs(rootsd[0]-rootsd[1]) > noiseDist):
+            # Append valid root
+            relativeP.append(rootsd[0])
+        else:
+            # Save noise
+            noiseP.append(rootsd[0])
+
+    for i in range(1,len(rootsd)-1): # mid roots
+            if (np.abs(rootsd[i]-rootsd[i+1]) > noiseDist):
+                if (len(noiseP) == 0 ): 
+                    # Append valid root
+                    relativeP.append(rootsd[i])
+                elif (len(noiseP)%2 == 0):
+                    # Append median of the noise roots
+                    noiseP.append(rootsd[i])
+                    relativeP.append(np.median(noiseP))
+                # Restart noise points 
+                noiseP = []
+            else:
+                # Save noise
+                noiseP.append(rootsd[i])
+
+    if (rootsd[-1] <= x[-1]) : # last root
+        if (len(noiseP) == 0 ): 
+            # Append valid root
+            relativeP.append(rootsd[-1])
+        else:
+            # Append median of the noise roots
+            noiseP.append(rootsd[-1])
+            relativeP.append(np.median(noiseP))
+
     # Compute mean data
-    amp = np.zeros(len(rootsd)-1, float)
-    for i in range(1,len(rootsd)):
-        amp[i-1] = np.abs(cs(rootsd[i])-cs(rootsd[i-1]))/2
+    amp = np.zeros(len(relativeP)-1, float)
+    for i in range(1,len(relativeP)):
+        amp[i-1] = np.abs(cs(relativeP[i])-cs(relativeP[i-1]))/2
     
     meanAmp = np.mean(amp)
-    freq = (int((len(rootsd)-1)/2) * 1000)/time[-1]
+    freq = (int((len(relativeP)-1)/2) * 1000)/time[-1]
 
     # Debug Only: draw interp. and points
     plt.figure(1)
     xs = np.linspace(x[0], x[-1], 1000, endpoint=True)
-    plt.plot(time, angle, "C7.", alpha=0.25,label="Raw Data")
+    plt.plot(time, angle, "C7.", alpha=0.25, label="Raw Data")
+    plt.plot(time, smoothAngle, "C8.", alpha=0.25, label="Smooth Data")
     plt.plot(x, y, "C1*", label="Inter. Pts")
     plt.plot(xs, cs(xs), "C0", label="CS approx.")
-    plt.plot(rootsd, cs(rootsd), "C3o", alpha=0.5, label="Relative Pts")
+    plt.plot(relativeP, cs(relativeP), "C3o", alpha=0.5, label="Relative Pts")
     plt.legend(loc="lower left", ncol=2)
     plt.grid()
     plt.show()
 
     return meanAmp, freq
 
-def exportData(ind, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames):
+def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames):
 
     # Export all the data in a cvs file
     dataHeader = "Time(ms), x_Head, y_Head, x_Joint, y_Joint, x_Torsion, y_Torsion, x_Tail, y_Tail, AngleAlpha(dg), AngleBeta(dg), AngleGamma(dg)"
-    data = np.transpose([ind[:nValidFrames], headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1],
+    data = np.transpose([time, headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1],
                          torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], alpha, beta, gamma])
     np.savetxt(pathlib.Path(exportPath,expID,expID + ".csv"), data, fmt="%10.5f", delimiter=',', header=dataHeader, comments="")
     
@@ -212,7 +258,7 @@ def exportData(ind, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, e
         w.writerow(["Gamma", aData[2, 0], aData[2, 1]])
 
     # Export the data in npy files to show faster in showData
-    np.save(pathlib.Path(exportPath, expID, "data", expID + "_ind"), ind[:nValidFrames])
+    np.save(pathlib.Path(exportPath, expID, "data", expID + "_time"), time)
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_alpha"), alpha)
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_beta"), beta)
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_gamma"), gamma)
@@ -226,7 +272,7 @@ if (__name__ == "__main__"):
     )
 
     exportPath = "./export/"
-    expID = "TestFish"
+    expID = "C1_4BLv1_13Dec_C001H001S0001"
     fps = 1000
 
     treatData(exportPath, expID, fps)

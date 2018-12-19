@@ -22,6 +22,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     fAreaMax = config.FISH_AREA_MAX
     bAreaMin = config.BOX_AREA_MIN
     bAreaMax = config.BOX_AREA_MAX
+    blankBorder = config.BLANK_BORDER
 
     videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside his functions
 
@@ -37,10 +38,9 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         raise Exception("Could not open the video reference: " + videoPath)
 
     # Define main objects
-    fishContoursPrev = np.zeros((1,2), int)
     numFrame = 0
     failFrames = 0
-    borderWidth = 10 # width of the blank blob border
+    consecFails = 0
 
     # First video loop. Define a smaller image movement subset and crop it. Choose the ROI and the contrast.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob and to save computations in each step.
@@ -48,7 +48,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw + 2*borderWidth, mbh + 2*borderWidth))
+    out = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + ".avi")), codec, fps, (mbw + 2*blankBorder, mbh + 2*blankBorder))
 
     # Read the first frame for second video walk
     _ret, frame = vid.read()
@@ -64,7 +64,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         # Crop the main movement box
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
         # Add a solid border to avoid blob border fusion
-        frame = cv.copyMakeBorder(frame, borderWidth, borderWidth, borderWidth, borderWidth, cv.BORDER_CONSTANT, None, WHITE)
+        frame = cv.copyMakeBorder(frame, blankBorder, blankBorder, blankBorder, blankBorder, cv.BORDER_CONSTANT, None, WHITE)
         # Pointer copy of frame without changes
         originalFrame = frame
 
@@ -95,17 +95,20 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), GREEN, 1, 8, 0)
             out.write(originalFrame)
 
+            # Reset consecutive failed frames counter
+            consecFails = 0
             # DebugOnly: Show results
             cv.imshow('Video', originalFrame)
             cv.waitKey(1)
         else:
+            consecFails += 1
             failFrames += 1
 
             # Export Results
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=False)
 
             # Check the fail proportion
-            if failFrames >= 10*totalFrames/100:
+            if (failFrames >= 10*totalFrames/100) or (consecFails >= 20):
                 vid.release()
                 cv.destroyAllWindows()
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
@@ -389,14 +392,10 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/fishTest.avi"
+    videoPath = "./video/fishBubble.avi"
     expID = "TestFish"
     exportPath = "./export/"
 
-    # try:
-    _failedFrames = swimTunnel(videoPath, exportPath, expID, fps)
-    # except Exception as err:
-    #     logging.error(err)
-    
+    _failedFrames = swimTunnel(videoPath, exportPath, expID, fps)    
     
     logging.info("DONE.")
