@@ -1,7 +1,6 @@
 # General libs
 import logging
 import pathlib
-import csv
 from threading import Thread
 import tkinter as tk
 from tkinter import filedialog, ttk
@@ -34,10 +33,14 @@ class mainWindow:
 
         # WINDOW PROPERTIES
 
-        self.defaultName = "{Default: videoName}"
-        self.defaultVid = "./video/fishTest.avi"
-        self.defaultSaveVid = "/home/avalls/Desktop/Results" #"./export/"
+        # Init. variables
+        self.defaultName = "{open a video}"
+        self.defaultVid = str(pathlib.Path.home())
+        self.defaultSaveVid = str(pathlib.Path.home())
         self.defaultFrames = "1000"
+
+        self.iniPath = str(pathlib.Path.home()) # first path in askopenfilename
+        self.iniSavePath = str(pathlib.Path.home()) # first path in asksavefilename
 
         # Main window
         self.master=master
@@ -70,7 +73,7 @@ class mainWindow:
         self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=10, pady=5)
 
         self.defaultID = tk.StringVar(self.mainFrame, value=self.defaultName)
-        self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID)
+        self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID, state="disable")
         self.txtVidId.grid(column=1, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
         # Export fps integer
@@ -115,7 +118,7 @@ class mainWindow:
         self.btnRun.grid(column=4, row=0, sticky=tk.E, padx=5, pady=5)
 
         # Show button.
-        self.btnShow =  tk.Button(self.btnFrame, text="Show", width=5, command=self.clickShow)
+        self.btnShow =  tk.Button(self.btnFrame, text="Show", width=5, command=self.clickShow, state="disable")
         self.btnShow.grid(column=3, row=0, sticky=tk.E, padx=5, pady=5)
 
         # List of buttons to threading
@@ -129,11 +132,11 @@ class mainWindow:
         # It saves the skeletons in "./data/" and the resultant video in exportPath using swimTunnel function.
         # It saves a cvs file in exportPath and treated data in "./data/" using treatData function.
         try:
+            
             videoPath = self.txtPath.get()
             expID = self.txtVidId.get()
             if expID == self.defaultName:
-                expID = pathlib.Path(videoPath).stem
-
+                raise Exception("Select a video before running the extraction...")
             fps = int(self.txtVidFps.get())
             exportPath = self.txtSavePath.get()
             if ((fps > 0) and (fps < 1001)):
@@ -148,25 +151,23 @@ class mainWindow:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
             self.lblStatus.config(text="Ready")
+            self.btnShow.configure(state="disable")
         else:
-            tk.messagebox.showinfo("Info", "The video has been processed. Check the results in "+ str(exportPath) +" folder.")
+            tk.messagebox.showinfo("Info", "The video has been processed. Find the results in "+ str(exportPath) +" folder.")
             logging.info("The video has been processed.")
-            self.lblStatus.config(text="Ready")
+            self.lblStatus.config(text="Done. Check the results or select a new video.")
+            self.btnShow.configure(state="normal")
 
     def showResults(self):
-        # It shows the data in the "./export" folder.
+        # It shows the data in the export folder.
         try:
-            videoPath = self.txtPath.get()
             importPath = self.txtSavePath.get()
             expID = self.txtVidId.get()
-            if expID == self.defaultName:
-                expID = pathlib.Path(videoPath).stem
-            fps = int(self.txtVidFps.get())
-            ind, beta, videoPathR = showData(importPath, expID, fps, gui=True)
+            time, beta, videoPathR = showData(importPath, expID, gui=True)
 
             # New Window
             showWin = tk.Toplevel(self.master)
-            showWindow(showWin, ind, beta, videoPathR)
+            showWindow(showWin, time, beta, videoPathR)
         except Exception as err:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
@@ -174,18 +175,25 @@ class mainWindow:
     # Click functions
 
     def clickPath(self):
-        iniPath = "/home/avalls/Desktop/13Dec" #str(pathlib.Path.home())+"/Videos" #TODO: delete /videos for distribution
-        filePath = tk.filedialog.askopenfilename(initialdir=iniPath, title="Select file to open", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
+        filePath = tk.filedialog.askopenfilename(initialdir=self.iniPath, title="Select a file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
             self.txtPath.delete(0, tk.END)
             self.txtPath.insert(0, filePath)
 
+            expID = pathlib.Path(filePath).stem
+            self.txtVidId.configure(state="normal")
+            self.txtVidId.delete(0, tk.END)
+            self.txtVidId.insert(0, expID)
+            self.txtVidId.configure(state="readonly")
+            self.iniPath = pathlib.Path(filePath).parent # remember the last opened path
+
     def clickSavePath(self):
-        iniSavePath = str(pathlib.Path.home()) 
-        fileSavePath = tk.filedialog.askdirectory(initialdir=iniSavePath, title="Select folder to save")
+        fileSavePath = tk.filedialog.askdirectory(initialdir=self.iniSavePath, title="Select folder to save")
         if fileSavePath != () and fileSavePath !="":
             self.txtSavePath.delete(0, tk.END)
             self.txtSavePath.insert(0, fileSavePath)
+
+            self.iniSavePath = pathlib.Path(fileSavePath).parent # remember the last opened path
 
     def clickRun(self):
         self.run_thread("run", self.runProcess)
@@ -215,7 +223,7 @@ class showWindow:
 
     # MASONRY
 
-    def __init__(self, master, ind, beta, videoPathR):
+    def __init__(self, master, time, beta, videoPathR):
 
         # WINDOW PROPERTIES
         
@@ -260,10 +268,10 @@ class showWindow:
 
         # Figure
         self.beta = beta
-        self.x = ind
+        self.x = time
         self.fig = plt.figure(figsize=(6, 4), dpi=100)
         plt.title("Angle between the tail and the head perpendicular (beta)")
-        plt.xlabel("Frame")
+        plt.xlabel("Time (ms)")
         plt.ylabel("beta (dg)")
         self.betaFig, = plt.plot(self.x, self.beta, "r", linewidth=0.5)
         self.lineFig, = plt.plot(np.zeros(np.size(self.x)), 'b--', linewidth=0.5)

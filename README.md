@@ -23,8 +23,11 @@ CV - Movement detection/description of a fish in a swim-tunnel.
 
 ## TODO
 
-- Mean skeleton: if not repeated x, no uniqueMean.
-- Delete the ExperimentID field.
 - Able to kill the process.
+- Contrast and fps in csv.
+
+- Mean skeleton: if there is not a repeated x, no uniqueMean.
+- Add a check of the skeleton length.
+- Use h and w in the blob check instead of area.
 
 ## Known bugs

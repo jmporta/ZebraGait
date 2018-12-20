@@ -9,9 +9,9 @@ import config
 
 # Colors
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
+GREEN = (51, 153, 0)
 RED = (0, 0, 255)
-BLUE = (255, 0, 0,)
+BLUE = (255, 153, 0,)
 
 
 def swimTunnel(videoPath, exportPath, expID, fps):
@@ -100,6 +100,11 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             # DebugOnly: Show results
             cv.imshow('Video', originalFrame)
             cv.waitKey(1)
+
+            # # Quit when ESC button pressed
+            # if cv.waitKey(1) == 27:
+            #     break
+            
         else:
             consecFails += 1
             failFrames += 1
@@ -108,7 +113,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=False)
 
             # Check the fail proportion
-            if (failFrames >= 10*totalFrames/100) or (consecFails >= 20):
+            if (failFrames >= 10*totalFrames/100) or (consecFails >= 5*totalFrames/100):
                 vid.release()
                 cv.destroyAllWindows()
                 raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
@@ -131,7 +136,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     logging.info("Extraction DONE.")
     logging.info("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
 
-    return failFrames
+    return failFrames, contrast
 
 def getMovementBox(frame):
 
@@ -212,11 +217,11 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
             (mbx, mby, mbw, mbh) = (x, y, w, h) 
 
-        # DebugOnly: Show the boxes union
-        cv.rectangle(backFrame, (mbx, mby), (mbx+mbw, mby+mbh), WHITE, 3, 8)
-        cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh), WHITE, 1, 8)
-        cv.imshow("Main box", backFrame)
-        cv.waitKey(1)
+        # # DebugOnly: Show the boxes union
+        # cv.rectangle(backFrame, (mbx, mby), (mbx+mbw, mby+mbh), WHITE, 3, 8)
+        # cv.rectangle(backFrame, (mx, my), (mw+mx, my+mh), WHITE, 1, 8)
+        # cv.imshow("Main box", backFrame)
+        # cv.waitKey(1)
 
         # Update the frame
         _ret, backFrame = backVid.read()
@@ -268,14 +273,8 @@ def getContrast(defaultContrast, frame):
 
 def preprocess(frame, contrast, blur, threshold):
 
-    # Force B&W
+    # B&W, normalize, contrast
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-
-    # # Apply gamma correction using the lookup table
-    # invGamma = 1.0/2
-    # table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-    # frame = cv.LUT(frame, table)
-
     frame = cv.normalize(frame, None, 0, 255, cv.NORM_MINMAX)
     frame = cv.convertScaleAbs(frame, alpha=contrast, beta=0)
 
@@ -285,7 +284,7 @@ def preprocess(frame, contrast, blur, threshold):
         frame = cv.medianBlur(frame,7)
 
     if threshold:
-        # Threshold
+        # OTSU Threshold
         _ret, frame = cv.threshold(frame, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
      
         # Dilate and close the image for a better edges detection
@@ -321,7 +320,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
         if (area > fAreaMin) and (area < fAreaMax):
             iFishContour = i
     
-    # # DebugOnly: Draw fish
+    # # DebugOnly: Draw fish contours
     # drawing = np.zeros((np.size(frame, 0), np.size(frame, 1)), np.uint8)
     # cv.drawContours(drawing, contours, iFishContour, WHITE, 2)
     # cv.imshow("Fish Contours", drawing)
@@ -392,10 +391,10 @@ if (__name__ == "__main__"):
     )
 
     fps = 1000
-    videoPath = "./video/fishBubble.avi"
+    videoPath = "./video/fishTest.avi"
     expID = "TestFish"
     exportPath = "./export/"
 
-    _failedFrames = swimTunnel(videoPath, exportPath, expID, fps)    
+    _failedFrames, _contrast = swimTunnel(videoPath, exportPath, expID, fps)    
     
     logging.info("DONE.")

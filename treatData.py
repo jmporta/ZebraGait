@@ -6,9 +6,9 @@ import csv
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-# Debug Only: draw 
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+# # Debug Only: draw 
+# import matplotlib.pyplot as plt
+# import matplotlib.animation as animation
 
 import config
 
@@ -164,9 +164,9 @@ def lenSK(skeleton, proportion):
 def angleData(time, angle):
 
     # Init. data
-    interpPart = 10
-    noiseDist = 1.5*interpPart
-    kerPts = 5
+    interpPart = 15
+    dist = 1.5
+    kerPts = 9
 
     # Smooth angle data
     ker = np.ones(kerPts)/kerPts
@@ -183,11 +183,13 @@ def angleData(time, angle):
     rootsd = cs.derivative().roots() 
 
     # Filter roots
+    noiseHDist = dist*interpPart
+    noiseVDist = noiseHDist*time[-1]/np.abs(np.max(y)-np.min(y))
     relativeP = []
     noiseP = []
 
     if (rootsd[0] >= x[0]): # first root
-        if (np.abs(rootsd[0]-rootsd[1]) > noiseDist):
+        if (np.abs(rootsd[0]-rootsd[1]) > noiseHDist) or (np.abs(cs(rootsd[0])-cs(rootsd[1])) > noiseVDist):
             # Append valid root
             relativeP.append(rootsd[0])
         else:
@@ -195,7 +197,7 @@ def angleData(time, angle):
             noiseP.append(rootsd[0])
 
     for i in range(1,len(rootsd)-1): # mid roots
-            if (np.abs(rootsd[i]-rootsd[i+1]) > noiseDist):
+            if (np.abs(rootsd[i]-rootsd[i+1]) > noiseHDist) or (np.abs(cs(rootsd[0])-cs(rootsd[1])) > noiseVDist):
                 if (len(noiseP) == 0 ): 
                     # Append valid root
                     relativeP.append(rootsd[i])
@@ -226,17 +228,17 @@ def angleData(time, angle):
     meanAmp = np.mean(amp)
     freq = (int((len(relativeP)-1)/2) * 1000)/time[-1]
 
-    # Debug Only: draw interp. and points
-    plt.figure(1)
-    xs = np.linspace(x[0], x[-1], 1000, endpoint=True)
-    plt.plot(time, angle, "C7.", alpha=0.25, label="Raw Data")
-    plt.plot(time, smoothAngle, "C8.", alpha=0.25, label="Smooth Data")
-    plt.plot(x, y, "C1*", label="Inter. Pts")
-    plt.plot(xs, cs(xs), "C0", label="CS approx.")
-    plt.plot(relativeP, cs(relativeP), "C3o", alpha=0.5, label="Relative Pts")
-    plt.legend(loc="lower left", ncol=2)
-    plt.grid()
-    plt.show()
+    # # Debug Only: draw the approx.
+    # plt.figure(1)
+    # xs = np.linspace(x[0], x[-1], 1000, endpoint=True)
+    # plt.plot(time, angle, "C7.", alpha=0.25, label="Raw Data")
+    # plt.plot(time, smoothAngle, "C8.", alpha=0.25, label="Smooth Data")
+    # plt.plot(x, y, "C1*", label="Inter. Pts")
+    # plt.plot(xs, cs(xs), "C0", label="CS approx.")
+    # plt.plot(relativeP, cs(relativeP), "C3o", alpha=0.5, label="Relative Pts")
+    # plt.legend(loc="lower left", ncol=2)
+    # plt.grid()
+    # plt.show()
 
     return meanAmp, freq
 
@@ -272,7 +274,7 @@ if (__name__ == "__main__"):
     )
 
     exportPath = "./export/"
-    expID = "C1_4BLv1_13Dec_C001H001S0001"
+    expID = "TestFast"
     fps = 1000
 
     treatData(exportPath, expID, fps)
