@@ -13,7 +13,7 @@ CV - Movement detection/description of a fish in a swim-tunnel.
     Choose ONLY one of them:
 
     * Install the OpenCV-base and OpenCV-contrib libraries manually from the source code. 
-    * Install the precompiled python packages through pip3. 
+    * Install the unofficial OpenCV precompiled python packages through pip3. 
 
 + Python libraries:
 
