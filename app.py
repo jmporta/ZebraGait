@@ -193,7 +193,7 @@ class mainWindow:
             self.txtSavePath.delete(0, tk.END)
             self.txtSavePath.insert(0, fileSavePath)
 
-            self.iniSavePath = pathlib.Path(fileSavePath).parent # remember the last opened path
+            self.iniSavePath = pathlib.Path(fileSavePath) # remember the last opened path
 
     def clickRun(self):
         self.run_thread("run", self.runProcess)

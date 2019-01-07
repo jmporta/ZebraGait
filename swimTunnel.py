@@ -99,11 +99,12 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             consecFails = 0
             # DebugOnly: Show results
             cv.imshow('Video', originalFrame)
-            cv.waitKey(1)
 
-            # # Quit when ESC button pressed
-            # if cv.waitKey(1) == 27:
-            #     break
+            # Abort if ESC button is pressed
+            if cv.waitKey(10) == 27:
+                vid.release()
+                cv.destroyAllWindows()
+                raise Exception("Process aborted by the user.")
             
         else:
             consecFails += 1
@@ -123,7 +124,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             cv.polylines(originalFrame, fishSkeleton, True, RED, 1,8)
             cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), RED, 1, 8,)
             cv.imshow('Video', originalFrame)
-            cv.waitKey(1)
+            cv.waitKey(10)
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -188,6 +189,8 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
     # Select the region of interest and the contrast
     (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
     cv.destroyAllWindows()
+    if rh == 0 or rw == 0:
+        raise Exception("The cropped region is void.")
     contrast = getContrast(defaultContrast, backFrame[ry:(ry+rh), rx:(rx+rw)])
 
     # Init. main box of the union

@@ -41,10 +41,8 @@ Build an executable file with PyInstaller, following the below steps:
 
 ## TODO
 
-- Able to kill the process.
-
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.
-- Use h and w in the blob check instead of area.
+- Use h and w in the blob check instead of the area.
 
 ## Known bugs
