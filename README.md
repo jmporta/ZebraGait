@@ -42,7 +42,6 @@ Build an executable file with PyInstaller, following the below steps:
 ## TODO
 
 - Able to kill the process.
-- Contrast and fps in csv.
 
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.

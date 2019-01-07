@@ -136,15 +136,15 @@ class mainWindow:
             videoPath = self.txtPath.get()
             expID = self.txtVidId.get()
             if expID == self.defaultName:
-                raise Exception("Select a video before running the extraction...")
+                raise Exception("Select a video before running the extraction.")
             fps = int(self.txtVidFps.get())
             exportPath = self.txtSavePath.get()
             if ((fps > 0) and (fps < 1001)):
                 # Run computations
                 self.lblStatus.config(text = "Processing the video...")
-                swimTunnel(videoPath, exportPath, expID, fps)
+                failedFrames, contrast = swimTunnel(videoPath, exportPath, expID, fps)
                 self.lblStatus.config(text = "Computing the data...")
-                treatData(exportPath, expID, fps)
+                treatData(exportPath, expID, fps, contrast , failedFrames)
             else:
                 raise Exception("The fps value must be in [1,1000].")
         except Exception as err:
@@ -311,12 +311,13 @@ if (__name__ == "__main__"):
     # Check/Create paths
     pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
 
-    # Logs configuration
+    # Logs configuration in console/file
     logging.basicConfig(
-        # TODO: uncomment for log file/ distribution
-        # filename=pathlib.Path(config.LOGS_PATH,"log_file.log"),
         level=logging.INFO,
-        format="%(asctime)s: %(levelname)s: %(message)s"
+        format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        handlers=[logging.FileHandler(pathlib.Path(config.LOGS_PATH, "log_file.log")),
+                  logging.StreamHandler()]
     )
 
     # Run gui and wait

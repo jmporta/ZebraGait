@@ -387,7 +387,7 @@ if (__name__ == "__main__"):
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s: %(message)s"
+        format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)"
     )
 
     fps = 1000

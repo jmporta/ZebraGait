@@ -13,7 +13,7 @@ from scipy.interpolate import CubicSpline
 import config
 
 
-def treatData(exportPath, expID, fps):
+def treatData(exportPath, expID, fps, contrast, failedFrames):
 
     # Init. data
     proportionJoint = config.PROPORTION_JOINT
@@ -41,11 +41,11 @@ def treatData(exportPath, expID, fps):
     dataBeta = angleData(time, beta)
     dataGamma =  angleData(time, gamma)
 
-    aData = np.array([dataAlpha, dataBeta,dataGamma], float)
+    aData = np.array([dataAlpha, dataBeta, dataGamma], float)
 
     # Export data
     logging.info("Exporting Data...")
-    exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames)
+    exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames, fps, contrast, failedFrames)
 
     logging.info("Treatment DONE.")
 
@@ -242,15 +242,15 @@ def angleData(time, angle):
 
     return meanAmp, freq
 
-def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames):
+def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames, fps, contrast, failedFrames):
 
-    # Export all the data in a cvs file
+    # Export all the skeleton data in a cvs file
     dataHeader = "Time(ms), x_Head, y_Head, x_Joint, y_Joint, x_Torsion, y_Torsion, x_Tail, y_Tail, AngleAlpha(dg), AngleBeta(dg), AngleGamma(dg)"
     data = np.transpose([time, headP[:nValidFrames, 0], headP[:nValidFrames, 1], jointP[:nValidFrames, 0], jointP[:nValidFrames, 1],
                          torsionP[:nValidFrames, 0], torsionP[:nValidFrames, 1], tailP[:nValidFrames, 0], tailP[:nValidFrames, 1], alpha, beta, gamma])
     np.savetxt(pathlib.Path(exportPath,expID,expID + ".csv"), data, fmt="%10.5f", delimiter=',', header=dataHeader, comments="")
     
-    # Append the global data to the csv file
+    # Append the freq./initial-conditions to the csv file
     with open(pathlib.Path(exportPath, expID, expID + ".csv"), 'a') as f:
         w = csv.writer(f)
         w.writerow([None])
@@ -258,6 +258,12 @@ def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, 
         w.writerow(["Alpha", aData[0, 0], aData[0, 1]])
         w.writerow(["Beta", aData[1, 0], aData[1, 1]])
         w.writerow(["Gamma", aData[2, 0], aData[2, 1]])
+
+        w.writerow([None])
+        w.writerow(["Contrast", "Fps", "Failed Frames"])
+        w.writerow([contrast, fps, failedFrames])
+
+
 
     # Export the data in npy files to show faster in showData
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_time"), time)
@@ -270,13 +276,15 @@ if (__name__ == "__main__"):
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s: %(message)s"
+        format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)"
     )
 
     exportPath = "./export/"
     expID = "TestFast"
     fps = 1000
+    contrast = "dunno"
+    failedFrames = "dunno"
 
-    treatData(exportPath, expID, fps)
+    treatData(exportPath, expID, fps, contrast, failedFrames)
     
     logging.info("DONE.")
