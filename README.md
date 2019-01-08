@@ -36,6 +36,11 @@ Build an executable file with PyInstaller, following the below steps:
    ```
 
 2. Run `build.sh` under Gnu/Linux or `build.bat` under Windows.
+    
+    Under Windows we must add the location of ffmpeg dll, editing the above line in `build.bat`:
+    ```bash
+    --add-binary "<PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION_ARCH>.dll;."
+    ```
 
 3. The resultant executable, located in `./dist`, needs a copy of the folder `icons` in the same directory to be executed.
 
