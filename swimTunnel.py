@@ -190,7 +190,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
     (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
     cv.destroyAllWindows()
     if rh == 0 or rw == 0:
-        raise Exception("The cropped region is void.")
+        raise Exception("The cropped region is empty.")
     contrast = getContrast(defaultContrast, backFrame[ry:(ry+rh), rx:(rx+rw)])
 
     # Init. main box of the union

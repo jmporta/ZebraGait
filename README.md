@@ -25,7 +25,7 @@ Choose ONLY one of the below options to install all the required libraries:
     ```
 ## Build an executable
 
-The executable files built with [PyInstaller](http://www.pyinstaller.org/) works without install libraries and ¿only with python>=3.6?
+The executable files built with [PyInstaller](http://www.pyinstaller.org/) works without install libraries and ¿only with python>=3.6?.
 
 Build an executable file with PyInstaller, following the below steps:
 

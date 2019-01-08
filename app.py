@@ -177,6 +177,7 @@ class mainWindow:
     def clickPath(self):
         filePath = tk.filedialog.askopenfilename(initialdir=self.iniPath, title="Select a file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
         if filePath != () and filePath != "":
+            filePath = pathlib.Path(filePath)
             self.txtPath.delete(0, tk.END)
             self.txtPath.insert(0, filePath)
 
@@ -190,6 +191,7 @@ class mainWindow:
     def clickSavePath(self):
         fileSavePath = tk.filedialog.askdirectory(initialdir=self.iniSavePath, title="Select folder to save")
         if fileSavePath != () and fileSavePath !="":
+            fileSavePath = pathlib.Path(fileSavePath)
             self.txtSavePath.delete(0, tk.END)
             self.txtSavePath.insert(0, fileSavePath)
 
