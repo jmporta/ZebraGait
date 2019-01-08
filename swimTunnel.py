@@ -253,7 +253,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 def getContrast(defaultContrast, frame):
 
     windowsName = "Choose Contrast"
-    cv.namedWindow(windowsName)
+    cv.namedWindow(windowsName,cv.WINDOW_NORMAL)
     
     def ContrastBar(val):
         alpha = cv.getTrackbarPos("Contrast", windowsName)

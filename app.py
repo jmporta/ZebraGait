@@ -189,7 +189,7 @@ class mainWindow:
             self.iniPath = pathlib.Path(filePath).parent # remember the last opened path
 
     def clickSavePath(self):
-        fileSavePath = tk.filedialog.askdirectory(initialdir=self.iniSavePath, title="Select folder to save")
+        fileSavePath = tk.filedialog.askdirectory(initialdir=self.iniSavePath, title="Select a folder to save")
         if fileSavePath != () and fileSavePath !="":
             fileSavePath = pathlib.Path(fileSavePath)
             self.txtSavePath.delete(0, tk.END)
