@@ -2,9 +2,17 @@
 
 **IMPORTANT**: At this moment this file contains just a few tips of the project. The project is under development.
 
+Movement detection/description of a fish in a swimming-tunnel. 
+
 ## Description
 
-CV - Movement detection/description of a fish in a swim-tunnel. 
+The `app.py` executes a GUI to work and interact with the other scripts. Anyway, the `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run in standalone way, only changing the inputs of each one in `__main__` function:
+
+* The `swimTunnel.py` script extracts and saves the raw data of the fish skeleton from a given video.
+
+* The `treatData.py` script treats the raw data of the fish skeleton to obtain a detailed description of the fish movement, saving the whole set of data into a csv file.
+
+* The `showData.py` scripts shows the treated data through plots.
 
 ## Install required libraries
 
@@ -45,6 +53,8 @@ Build an executable file with PyInstaller, following the below steps:
 3. The resultant executable, located in `./dist`, needs a copy of the folder `icons` in the same directory to be executed.
 
 ## TODO
+
+- Allow the inputs through command line arguments
 
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.
