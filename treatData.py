@@ -75,7 +75,7 @@ def importData(filePath, expID, proportionJoint, proportionTorsion, nFiles):
             skeleton = skeleton[np.argsort(skeleton[:, 0])] # sort points by x
             skeleton = np.unique(skeleton, axis=0) # delete repeated points
             skeleton = uniqueMean(skeleton) # delete repeated points_x and get they mean_y
-            skeleton[:, 1] = -skeleton[:, 1] # convert coords. to R^2. Original ones are image matrix indicies
+            skeleton[:, 1] = -skeleton[:, 1] # convert coords. to R^2. Original ones are image matrix indexes
 
             # Save points- Fish direction swimming: left
             ind[validInd] = i

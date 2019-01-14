@@ -24,7 +24,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     bAreaMax = config.BOX_AREA_MAX
     blankBorder = config.BLANK_BORDER
 
-    videoPath = str(pathlib.Path(videoPath)) # openCV do not admit pathlib inside his functions
+    videoPath = str(pathlib.Path(videoPath)) # OpenCV do not admit pathlib inside his functions
 
     # Check/Create paths
     pathlib.Path(exportPath, expID, "skeleton").mkdir(parents=True, exist_ok=True)
@@ -211,7 +211,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
         (mx, my, mw, mh) = getMovementBox(backFrame)
 
-        # Step3 -- Join the boxes ommiting the limit ones
+        # Step3 -- Join the boxes omiting the limit ones
         if (mw*mh > bAreaMin) and (mw*mh < bAreaMax):
             x = min(mx, mbx)
             y = min(my, mby)
@@ -383,7 +383,7 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
     if (validFrame):
         np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), fishSkeleton)
     else:
-        # Write an ampty file if the frame is failed
+        # Write an empty file if the frame is failed
         np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), 0)
 
 if (__name__ == "__main__"):
