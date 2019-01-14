@@ -6,7 +6,7 @@ Motion detection/description of a zebra fish in a swimming-tunnel.
 
 ## Description
 
-The `KinematicsZebra.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run in a standalone way, only changing the inputs of each one in the `__main__` function:
+The `KinematicsZebra.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run standalone, only changing the inputs of each one in the `__main__` function:
 
 * The `swimTunnel.py` script extracts and saves the raw data of the fish skeleton from a given video.
 
@@ -45,7 +45,7 @@ Build an executable file with PyInstaller, following the steps below:
 
 2. Run `build.sh` under Gnu/Linux or `build.bat` under Windows.
     
-    In Windows we must add the location of ffmpeg dll, editing the above line in `build.bat`:
+    In Windows, we must add the location of ffmpeg dll, editing the above line in `build.bat`:
     ```bash
     --add-binary "<PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION_ARCH>.dll;."
     ```
