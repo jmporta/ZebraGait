@@ -11,7 +11,7 @@ import config
 WHITE = (255, 255, 255)
 GREEN = (51, 153, 0)
 RED = (0, 0, 255)
-BLUE = (255, 153, 0,)
+BLUE = (255, 153, 0)
 
 
 def swimTunnel(videoPath, exportPath, expID, fps):
