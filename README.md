@@ -1,22 +1,22 @@
-# SwimTunnelPy
+# Kinematics Zebra
 
 **IMPORTANT**: At this moment this file contains just a few tips of the project. The project is under development.
 
-Movement detection/description of a fish in a swimming-tunnel. 
+Motion detection/description of a zebra fish in a swimming-tunnel. 
 
 ## Description
 
-The `app.py` executes a GUI to work and interact with the other scripts. Anyway, the `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run in standalone way, only changing the inputs of each one in `__main__` function:
+The `KinematicsZebra.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run in a standalone way, only changing the inputs of each one in the `__main__` function:
 
 * The `swimTunnel.py` script extracts and saves the raw data of the fish skeleton from a given video.
 
-* The `treatData.py` script treats the raw data of the fish skeleton to obtain a detailed description of the fish movement, saving the whole set of data into a csv file.
+* The `treatData.py` script treats the raw data of the fish skeleton to obtain a detailed description of the fish movement, saving the whole data set into a csv file.
 
 * The `showData.py` scripts shows the treated data through plots.
 
 ## Install required libraries
 
-The project is build under python v3.6 and opencv v3.4.
+The project is built under python v3.6 and opencv v3.4.
 
 Choose ONLY one of the below options to install all the required libraries:
 
@@ -33,9 +33,9 @@ Choose ONLY one of the below options to install all the required libraries:
     ```
 ## Build an executable
 
-The executable files built with [PyInstaller](http://www.pyinstaller.org/) works without install libraries and ¿only with python>=3.6?.
+The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install libraries or python.
 
-Build an executable file with PyInstaller, following the below steps:
+Build an executable file with PyInstaller, following the steps below:
 
 1. Install PyInstaller through python package manager:
 
@@ -45,7 +45,7 @@ Build an executable file with PyInstaller, following the below steps:
 
 2. Run `build.sh` under Gnu/Linux or `build.bat` under Windows.
     
-    Under Windows we must add the location of ffmpeg dll, editing the above line in `build.bat`:
+    In Windows we must add the location of ffmpeg dll, editing the above line in `build.bat`:
     ```bash
     --add-binary "<PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION_ARCH>.dll;."
     ```
@@ -54,10 +54,11 @@ Build an executable file with PyInstaller, following the below steps:
 
 ## TODO
 
-- Allow the inputs through command line arguments
-
+- Allow the inputs through command line arguments.
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.
 - Use h and w in the blob check instead of the area.
 
 ## Known bugs
+
++ None

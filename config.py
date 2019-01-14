@@ -4,7 +4,7 @@ LOGS_PATH = "./logs/"  # Path to save the log files
 
 # Extraction Variables
 
-DEFAULT_CONTRAST = 1.00 # Default value of the contrast [0.,3.]
+DEFAULT_CONTRAST = 1.00 # Default value of the contrast in [0.,3.]
 
 BLANK_BORDER = 10 # Size of the blank crop border
 
