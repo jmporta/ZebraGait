@@ -16,7 +16,7 @@ The `KinematicsZebra.py` executes a GUI to work and interact with the other scri
 
 ## Install required libraries
 
-The project is built under python v3.6 and opencv v3.4.
+The project is built under python v3.6 and opencv v4.0.0
 
 Choose ONLY one of the below options to install all the required libraries:
 

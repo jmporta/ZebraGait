@@ -154,7 +154,7 @@ def getMovementBox(frame):
     frame = cv.Canny(frame, lower, upper)
 
     # Find countours
-    _ret, contours, _hier= cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, _hier= cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # Join the contours in one
     if np.size(contours) == 0:
@@ -313,7 +313,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
     frame = cv.Canny(frame, lower, upper)
 
     # Find and draw Contours
-    _ret, contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # Delete unnecessary blobs
     iFishContour = 0
@@ -343,7 +343,7 @@ def getFishSkeleton(frame):
     frame = cv.ximgproc.thinning(frame, thinningType=cv.ximgproc.THINNING_ZHANGSUEN)
     
     # Find the Skeleton
-    _ret, contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    contours, _hier = cv.findContours(frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # Delete unnecessary lines
     maxLen = 0
