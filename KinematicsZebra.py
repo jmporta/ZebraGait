@@ -129,8 +129,6 @@ class mainWindow:
     # Main functions
     def runProcess(self):
         # The selected video will be processed and the resultant data will be treated.
-        # It saves the skeletons in "./data/" and the resultant video in exportPath using swimTunnel function.
-        # It saves a cvs file in exportPath and treated data in "./data/" using treatData function.
         try:
             
             videoPath = self.txtPath.get()
