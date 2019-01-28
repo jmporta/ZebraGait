@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import os
 import csv
 
 import numpy as np

@@ -283,7 +283,7 @@ def preprocess(frame, contrast, blur, threshold):
     if blur:
         # Clean Noise
         frame = cv.GaussianBlur(frame, (5, 5), 0, 0)
-        frame = cv.medianBlur(frame,7)
+        frame = cv.medianBlur(frame, 7)
 
     if threshold:
         # OTSU Threshold
