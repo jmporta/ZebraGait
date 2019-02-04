@@ -65,7 +65,7 @@ class mainWindow:
         self.txtPath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
         self.txtPath.grid(column=1, row=0, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
-        self.btnPath =  tk.Button(self.mainFrame, text="Open", command=self.clickPath)
+        self.btnPath =  tk.Button(self.mainFrame, text="...", command=self.clickPath)
         self.btnPath.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
 
         # Export string name
@@ -92,7 +92,7 @@ class mainWindow:
         self.txtSavePath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultSavePath)
         self.txtSavePath.grid(column=1, row=2, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
-        self.btnSavePath =  tk.Button(self.mainFrame, text="Select", command=self.clickSavePath)
+        self.btnSavePath =  tk.Button(self.mainFrame, text="...", command=self.clickSavePath)
         self.btnSavePath.grid(column=4, row=2, sticky=tk.W, padx=5, pady=5)
 
         # RUN FRAME
