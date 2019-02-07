@@ -4,4 +4,4 @@ pyinstaller --noconfirm --log-level=INFO ^
     --add-data="icons;icons" ^
     --add-binary "C:\Users\Arnau\AppData\Local\Programs\Python\Python36\Lib\site-packages\cv2\opencv_ffmpeg345_64.dll;." ^
     --icon=.\icons\gar-fish.ico ^
-    app.py
+    kinematicsZebra_Tk.py

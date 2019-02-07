@@ -109,10 +109,6 @@ class mainWindow:
         self.lblStatus = tk.Label(self.btnFrame, text="Ready", width=28, anchor=tk.W)
         self.lblStatus.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 
-        # # Spacer
-        # self.spacer = tk.Label(self.btnFrame, text=" ", width=20)
-        # self.spacer.grid(column=2, row=0, sticky=tk.W, padx=5, pady=5)
-
         # Run button
         self.btnRun =  tk.Button(self.btnFrame, text="Run", width=5, command=self.clickRun)
         self.btnRun.grid(column=4, row=0, sticky=tk.E, padx=5, pady=5)

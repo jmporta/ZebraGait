@@ -394,7 +394,7 @@ if (__name__ == "__main__"):
 
     fps = 1000
     videoPath = "./video/fishTest.avi"
-    expID = "TestFish"
+    expID = "test"
     exportPath = "./export/"
 
     _failedFrames, _contrast = swimTunnel(videoPath, exportPath, expID, fps)    

@@ -40,8 +40,7 @@ def plotGraphs(time, beta):
 if (__name__ == "__main__"):
 
     exportPath = "./export/"
-    expID = "TestFish"
-    fps = 1000
+    expID = "test"
 
     showData(exportPath, expID)
     

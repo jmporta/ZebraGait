@@ -6,7 +6,7 @@ Motion detection/description of a zebra fish in a swimming-tunnel.
 
 ## Description
 
-The `KinematicsZebra.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run standalone, only changing the inputs of each one in the `__main__` function:
+The `kinematicsZebra_Tk.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run standalone, only changing the inputs of each one in the `__main__`.
 
 * The `swimTunnel.py` script extracts and saves the raw data of the fish skeleton from a given video.
 
@@ -35,7 +35,7 @@ Choose ONLY one of the below options to install all the required libraries:
 
 The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install libraries or python.
 
-Build an executable file with PyInstaller, following the steps below:
+Build an executable file from main script `KinematicsZebra_Tk.py` with PyInstaller, following the steps below:
 
 1. Install PyInstaller through python package manager:
 
@@ -43,18 +43,19 @@ Build an executable file with PyInstaller, following the steps below:
    pip3 install pyinstaller
    ```
 
-2. Run `build.sh` under Gnu/Linux or `build.bat` under Windows.
+2. Edit `build.sh` under Gnu/Linux or `build.bat` under Windows, specifying the main script and the desired options.
     
     In Windows, we must add the location of ffmpeg dll, editing the above line in `build.bat`:
     ```bash
     --add-binary "<PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION_ARCH>.dll;."
     ```
+3. Run the `build.sh` or `build.bat` script.
 
-3. The resultant executable, located in `./dist`, needs a copy of the folder `icons` in the same directory to be executed.
+4. The resultant executable tk/tcl GUI, located in `./dist`, needs a copy of the folder `icons` in the same directory to be executed.
 
 ## TODO
 
-- Allow the inputs through command line arguments.
+- Qt GUI
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.
 - Use h and w in the blob check instead of the area.

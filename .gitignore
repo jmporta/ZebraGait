@@ -1,7 +1,6 @@
 .vscode/
 video/
 export/
-data/
 logs/
 
 *.dat

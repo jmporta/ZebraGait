@@ -279,7 +279,7 @@ if (__name__ == "__main__"):
     )
 
     exportPath = "./export/"
-    expID = "TestFast"
+    expID = "test"
     fps = 1000
     contrast = "dunno"
     failedFrames = "dunno"
