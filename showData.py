@@ -40,7 +40,7 @@ def plotGraphs(time, beta):
 if (__name__ == "__main__"):
 
     exportPath = "./export/"
-    expID = "test"
+    expID = "testID"
 
     showData(exportPath, expID)
     
