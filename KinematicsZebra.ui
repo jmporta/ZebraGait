@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/gar-fish.png</normaloff>icons/gar-fish.png</iconset>
+    <normaloff>icons/gar-fish.ico</normaloff>icons/gar-fish.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="gridLayoutWidget">
