@@ -16,7 +16,7 @@ import config
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
-from models import kinematicsZebra_ui, showWindow_ui
+from models import kinematicsZebra_ui, showWindow_ui, resources_rc
 
 class MainWindow(QtWidgets.QMainWindow, kinematicsZebra_ui.Ui_KinematicsZebra):
     def __init__(self):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'KinematicsZebra.ui'
+# Form implementation generated from reading ui file 'kinematicsZebra.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.3
 #
@@ -15,7 +15,7 @@ class Ui_KinematicsZebra(object):
         KinematicsZebra.setMinimumSize(QtCore.QSize(580, 222))
         KinematicsZebra.setMaximumSize(QtCore.QSize(580, 222))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/gar-fish.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/icon/icons/gar-fish.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         KinematicsZebra.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(KinematicsZebra)
         self.centralwidget.setObjectName("centralwidget")
@@ -124,7 +124,6 @@ class Ui_KinematicsZebra(object):
         self.fpsLabel.setText(_translate("KinematicsZebra", "fps:"))
         self.progressLabel.setText(_translate("KinematicsZebra", "Ready"))
         self.RunButton.setText(_translate("KinematicsZebra", "Run"))
-
 
 if __name__ == "__main__":
     import sys

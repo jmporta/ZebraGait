@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'CheckResults.ui'
+# Form implementation generated from reading ui file 'showWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.3
 #
@@ -13,7 +13,7 @@ class Ui_showWindow(object):
         showWindow.setObjectName("showWindow")
         showWindow.resize(664, 781)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/gar-fish.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/icon/icons/gar-fish.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         showWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(showWindow)
         self.centralwidget.setObjectName("centralwidget")

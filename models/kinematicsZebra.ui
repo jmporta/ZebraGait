@@ -26,8 +26,8 @@
    <string>Kinematics Zebra</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>icons/gar-fish.ico</normaloff>icons/gar-fish.ico</iconset>
+   <iconset resource="resources.qrc">
+    <normaloff>:/icon/icons/gar-fish.ico</normaloff>:/icon/icons/gar-fish.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="gridLayoutWidget">
@@ -266,6 +266,8 @@
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

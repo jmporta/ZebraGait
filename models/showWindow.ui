@@ -14,8 +14,8 @@
    <string>Check Results</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>icons/gar-fish.ico</normaloff>icons/gar-fish.ico</iconset>
+   <iconset resource="resources.qrc">
+    <normaloff>:/icon/icons/gar-fish.ico</normaloff>:/icon/icons/gar-fish.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QSlider" name="slider">
@@ -63,6 +63,8 @@
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

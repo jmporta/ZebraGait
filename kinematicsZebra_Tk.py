@@ -44,9 +44,9 @@ class mainWindow:
         self.master.title("Swim Tunnel")
         master.resizable(width=False, height=False)
 
-        # Icon
-        self.img = tk.PhotoImage(file=pathlib.Path("./icons/gar-fish.png"))
-        self.master.tk.call("wm", "iconphoto", master._w, self.img)
+        # # Icon
+        # self.img = tk.PhotoImage(file=pathlib.Path("./icons/gar-fish.png"))
+        # self.master.tk.call("wm", "iconphoto", master._w, self.img)
 
         # FIELDS FRAME
 

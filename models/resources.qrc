@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>icons/gar-fish.ico</file>
+  </qresource>
+</RCC>
