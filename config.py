@@ -1,6 +1,6 @@
-# Global Variables
+# GLOBAL VARIABLES
 
-LOGS_PATH = "./export/logs/"  # Path to save the log files
+LOGS_PATH = "./logs/"  # Path to save the log files
 
 # Extraction Variables
 

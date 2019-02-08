@@ -1,12 +1,9 @@
+# General libs
 import pathlib
 import logging
 import cv2 as cv
 import numpy as np 
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
-
-from swimTunnel import swimTunnel 
-from treatData import treatData
-from showData import showData
 
 # Import matplotlib Agg buffer prepared to threading/embedding on tkinter
 import matplotlib
@@ -14,16 +11,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 
-# Globals
-LOGS_PATH = "./export/logs"
+# Import project libs
+import config
+from swimTunnel import swimTunnel
+from treatData import treatData
+from showData import showData
+from models import kinematicsZebra_ui, showWindow_ui
 
-# Load ui file
-MainWindowForm, MainWindowBase = uic.loadUiType("./models/KinematicsZebra.ui")
-CheckResultsForm, CheckResultsBase = uic.loadUiType("./models/CheckResults.ui")
-
-class MainWindow(MainWindowBase, MainWindowForm):
+class MainWindow(QtWidgets.QMainWindow, kinematicsZebra_ui.Ui_KinematicsZebra):
     def __init__(self):
-        MainWindowBase.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.setupUi(self)
 
         # Select video file
@@ -107,9 +104,10 @@ class MainWindow(MainWindowBase, MainWindowForm):
         self.cwindow = ShowWindow(time, beta, showVid)
         self.cwindow.show()
 
-class ShowWindow(CheckResultsBase, CheckResultsForm):
+
+class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
     def __init__(self, time, beta, videoPathR, parent=None):
-        CheckResultsBase.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.setupUi(self)
 
         # VID
@@ -185,14 +183,14 @@ class ShowWindow(CheckResultsBase, CheckResultsForm):
 if __name__ == "__main__":
 
     # Check/Create paths
-    pathlib.Path(LOGS_PATH).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
 
     # Logs configuration in console/file
     logging.basicConfig(
         level=logging.INFO,
         format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
         datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.FileHandler(pathlib.Path(LOGS_PATH, "log_file.log")),
+        handlers=[logging.FileHandler(pathlib.Path(config.LOGS_PATH, "log_file.log")),
                   logging.StreamHandler()]
     )
 

@@ -6,8 +6,6 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 import PIL.Image
 import PIL.ImageTk
-
-# Numerical libs
 import numpy as np
 import cv2 as cv
 
@@ -18,11 +16,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 # Import own libs
+import config
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
-
-import config
 
 
 class mainWindow:
