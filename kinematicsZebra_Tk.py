@@ -302,7 +302,7 @@ class showWindow:
         self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame))
         self.canvasVid.itemconfig(self.canvasVidArea,image=self.photo)
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
 
     # Check/Create paths
     pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)

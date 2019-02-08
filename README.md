@@ -6,13 +6,17 @@ Motion detection/description of a zebra fish in a swimming-tunnel.
 
 ## Description
 
-The `kinematicsZebra_Tk.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py`, and `showData.py` scripts can run standalone, only changing the inputs of each one in the `__main__`.
+The `kinematicsZebra_Tk.py`, `kinematicsZebra_Qt.py` executes a GUI to work and interact with the other scripts. Anyway, `swimTunnel.py`, `treatData.py` and `showData.py` scripts can run standalone, only changing the inputs of each one in the `__main__`.
 
 * The `swimTunnel.py` script extracts and saves the raw data of the fish skeleton from a given video.
 
 * The `treatData.py` script treats the raw data of the fish skeleton to obtain a detailed description of the fish movement, saving the whole data set into a csv file.
 
 * The `showData.py` scripts shows the treated data through plots.
+
+## Test
+
+The test folder contains a video to test the scripts.
 
 ## Install required libraries
 
@@ -35,7 +39,7 @@ Choose ONLY one of the below options to install all the required libraries:
 
 The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install libraries or python.
 
-Build an executable file from main script `KinematicsZebra_Tk.py` with PyInstaller, following the steps below:
+Build an executable file from main scripts `KinematicsZebra_Tk.py` or `KinematicsZebra_Qt.py` with PyInstaller, following the steps below:
 
 1. Install PyInstaller through python package manager:
 
@@ -55,7 +59,6 @@ Build an executable file from main script `KinematicsZebra_Tk.py` with PyInstall
 
 ## TODO
 
-- Qt GUI
 - Mean skeleton: if there is not a repeated x, no uniqueMean.
 - Add a check of the skeleton length.
 - Use h and w in the blob check instead of the area.

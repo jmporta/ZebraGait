@@ -1,18 +1,29 @@
 import pathlib
 import logging
+import cv2 as cv
+import numpy as np 
+from PyQt5 import QtCore, QtWidgets, QtGui, uic
 
-from PyQt5 import QtCore, QtWidgets, uic
 from swimTunnel import swimTunnel 
 from treatData import treatData
+from showData import showData
 
+# Import matplotlib Agg buffer prepared to threading/embedding on tkinter
+import matplotlib
+matplotlib.use("Agg") 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+
+# Globals
 LOGS_PATH = "./export/logs"
 
 # Load ui file
-MainWindowForm, MainWindowBase = uic.loadUiType("KinematicsZebra.ui")
+MainWindowForm, MainWindowBase = uic.loadUiType("./models/KinematicsZebra.ui")
+CheckResultsForm, CheckResultsBase = uic.loadUiType("./models/CheckResults.ui")
 
 class MainWindow(MainWindowBase, MainWindowForm):
-    def __init__(self, *args, **kwargs):
-        QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
+    def __init__(self):
+        MainWindowBase.__init__(self)
         self.setupUi(self)
 
         # Select video file
@@ -34,9 +45,6 @@ class MainWindow(MainWindowBase, MainWindowForm):
         self.checkDialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
         self.checkButton = self.checkDialog.addButton("Check", QtWidgets.QMessageBox.AcceptRole)
         self.checkButton.clicked.connect(self.check)
-
-    def check(self):
-        pass
    
     def selectVidPath(self):
         vidPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file",  self.iniPath ,"Video files (*.avi *.mpg)")
@@ -65,11 +73,16 @@ class MainWindow(MainWindowBase, MainWindowForm):
             
             # Run the swimtunnel
             self.progressLabel.setText("Processing the video...")
-            #failedFrames, contrast = swimTunnel(videoPath, exportPath, expID, fps)
+            failedFrames, contrast = swimTunnel(videoPath, exportPath, expID, fps)
+            
             self.progressLabel.setText("Computing the data...")
-            #treatData(exportPath, expID, fps, contrast , failedFrames)
+            treatData(exportPath, expID, fps, contrast , failedFrames)
+
+            self.progressLabel.setText("DONE.")
+
             self.checkDialog.setInformativeText("Find the results in "+ str(exportPath) +" folder.")
             self.checkDialog.exec_()
+
         except Exception as err:
             self.progressBar.setMaximum(10)
             self.progressLabel.setText("An error occurred, try again.")
@@ -86,7 +99,89 @@ class MainWindow(MainWindowBase, MainWindowForm):
             self.savePathTButton.setEnabled(True)
             self.progressLabel.setText("Ready")
    
+    def check(self):
+        importPath = self.savePathLineEdit.text()
+        expID = self.expIDLineEdit.text()
+        time, beta, showVid = showData(importPath, expID, gui=True)
+
+        self.cwindow = ShowWindow(time, beta, showVid)
+        self.cwindow.show()
+
+class ShowWindow(CheckResultsBase, CheckResultsForm):
+    def __init__(self, time, beta, videoPathR, parent=None):
+        CheckResultsBase.__init__(self)
+        self.setupUi(self)
+
+        # VID
+
+        # Open the video object
+        self.videoPathR = videoPathR
+        self.vid = cv.VideoCapture(str(self.videoPathR))
+        
+        if (not self.vid.isOpened()):
+            raise Exception("Could not open the video reference: " + videoPathR)
+        
+        # Get the number of video frames
+        self.numFrames = self.vid.get(cv.CAP_PROP_FRAME_COUNT)
+
+        # Set slider
+        self.slider.setMaximum(self.numFrames -1)
+        self.slider.valueChanged.connect(self.valueChange)
+        
+        # Load the first frame
+        self.vid.set(cv.CAP_PROP_POS_FRAMES, 0)
+        _, self.frame = self.vid.read()
+        # Convert image to qt format
+        image = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB)
+        image = QtGui.QImage(image.data, image.shape[1], image.shape[0], 3*image.shape[1], QtGui.QImage.Format_RGB888)
+        image = QtGui.QPixmap.fromImage(image)
+        pixmap = QtGui.QPixmap(image)
+        # Draw the first frame
+        self.labelVid.setPixmap(pixmap.scaled(self.labelVid.size(), QtCore.Qt.KeepAspectRatio))
+
+        # FIG
+
+        # Figure
+        self.beta = beta
+        self.x = time
+        self.fig = plt.figure(figsize=(6, 4), dpi=100)
+        plt.title("Angle between the tail and the head perpendicular (beta)")
+        plt.xlabel("Time (ms)")
+        plt.ylabel("beta (dg)")
+        self.betaFig, = plt.plot(self.x, self.beta, "r", linewidth=0.5)
+        self.lineFig, = plt.plot(np.zeros(np.size(self.x)), 'b--', linewidth=0.5)
+        self.pointDraw, = plt.plot(self.x[0], self.beta[0], "bo")
+        # Canvas object for plot
+        self.canvasPlot = FigureCanvasQTAgg(self.fig)
+        # Toolbar for plot
+        self.toolbar = NavigationToolbar2QT(self.canvasPlot, self)
+    
+        # Show in the layout
+        self.plotLayout.addWidget(self.toolbar)
+        self.plotLayout.addWidget(self.canvasPlot)
+
+    def valueChange(self):
+        self.updateFrame(self.slider.value())
+        self.updatePoint(self.slider.value())
+        
+    def updatePoint(self, value):
+        self.pointDraw.set_xdata(self.x[value])
+        self.pointDraw.set_ydata(self.beta[value])
+        self.canvasPlot.draw_idle()
    
+    def updateFrame(self, value):
+        # Set a frame
+        self.vid.set(cv.CAP_PROP_POS_FRAMES, value)
+        _, self.frame = self.vid.read()
+        # Convert image to qt format
+        image = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB)
+        image = QtGui.QImage(image.data, image.shape[1], image.shape[0], 3*image.shape[1], QtGui.QImage.Format_RGB888)
+        image = QtGui.QPixmap.fromImage(image)
+        pixmap = QtGui.QPixmap(image)
+        # Draw the frame
+        self.labelVid.setPixmap(pixmap.scaled(self.labelVid.size(), QtCore.Qt.KeepAspectRatio))
+        
+
 if __name__ == "__main__":
 
     # Check/Create paths
