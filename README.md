@@ -55,8 +55,6 @@ Build an executable file from main scripts `KinematicsZebra_Tk.py` or `Kinematic
     ```
 3. Run the `build.sh` or `build.bat` script.
 
-4. The resultant executable tk/tcl GUI, located in `./dist`, needs a copy of the folder `icons` in the same directory to be executed.
-
 ## TODO
 
 - Mean skeleton: if there is not a repeated x, no uniqueMean.

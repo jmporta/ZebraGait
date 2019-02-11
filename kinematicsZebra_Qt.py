@@ -3,7 +3,7 @@ import pathlib
 import logging
 import cv2 as cv
 import numpy as np 
-from PyQt5 import QtCore, QtWidgets, QtGui, uic
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 # Import matplotlib Agg buffer prepared to threading/embedding on tkinter
 import matplotlib
