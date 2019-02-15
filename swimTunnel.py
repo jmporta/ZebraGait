@@ -12,6 +12,8 @@ GREEN = (51, 153, 0)
 RED = (0, 0, 255)
 BLUE = (255, 153, 0)
 
+FRAME = []
+
 
 def swimTunnel(videoPath, exportPath, expID, fps):
 
@@ -52,6 +54,9 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     # Read the first frame for second video walk
     _ret, frame = vid.read()
 
+    # TODO: DELETE
+    # OUTFRAME = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + "BIG.avi")), codec, fps, (np.size(frame,0), np.size(frame,1)))
+
     # Second video loop to find the skeleton and its data
     logging.info("Extracting data...")
 
@@ -59,13 +64,16 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         numFrame += 1
 
         # Step1 -- Initial crops/adds
+        
+        # TODO: DELETE
+        # FRAME = frame.copy()
 
         # Crop the main movement box
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
         # Add a solid border to avoid blob border fusion
         frame = cv.copyMakeBorder(frame, blankBorder, blankBorder, blankBorder, blankBorder, cv.BORDER_CONSTANT, None, WHITE)
-        # Pointer copy of frame without changes
-        originalFrame = frame
+        # Hard copy of frame without changes
+        originalFrame = frame.copy()
 
         # Step2 -- PreProcess the image
 
@@ -75,7 +83,6 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
         fishContours = getFishContours(frame, fAreaMin, fAreaMax)
         fishSkeleton = getFishSkeleton(frame)
-        (fx, fy, fw, fh) = cv.boundingRect(fishContours)  # fish contour rectangle
 
         # Step4 -- Validate and Show/Save the results
 
@@ -85,20 +92,23 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         
         # Check the the conditions and save the results
         if checkFrame(fishSkeleton, fishContours, fishContoursPrev):
-            # Export Results
+            # Export and draw the Results
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=True)
-
-            # Save the frame in file
-            cv.polylines(originalFrame, fishContours, True, BLUE, 1)
-            cv.polylines(originalFrame, fishSkeleton, True, RED, 1)
-            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), GREEN, 1, 8, 0)
-            out.write(originalFrame)
+            drawResults(originalFrame, fishContours, fishSkeleton, out, validFrame=True)
+            
+            # TODO: DELETE
+            # (fx, fy, fw, fh) = cv.boundingRect(fishContours) 
+            # cv.drawContours(FRAME, fishContours, -1, BLUE, 2, offset=(mbx-blankBorder,mby-blankBorder))
+            # cv.drawContours(FRAME, fishSkeleton, -1, RED, 2, offset=(mbx-blankBorder,mby-blankBorder))
+            # cv.rectangle(FRAME, (fx+mbx-blankBorder,fy+mby-blankBorder),(fw+fx+mbx-blankBorder,fy+mby+fh-blankBorder), GREEN, 2)
+            # cv.imshow("Frame",FRAME) 
+            # OUTFRAME.write(FRAME)
 
             # Reset consecutive failed frames counter
             consecFails = 0
+
             # DebugOnly: Show results
             cv.imshow('Video', originalFrame)
-
             # Abort if ESC button is pressed
             if cv.waitKey(10) == 27:
                 vid.release()
@@ -116,14 +126,17 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             if (failFrames >= 10*totalFrames/100) or (consecFails >= 5*totalFrames/100):
                 vid.release()
                 cv.destroyAllWindows()
-                raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")
+                raise Exception("Too much failed frames! The computation do not proceed, it could be wrong.")   
 
+            drawResults(originalFrame, fishContours, fishSkeleton, out, validFrame=False)
+            
             # DebugOnly: Show results
-            cv.polylines(originalFrame, fishContours, True, RED, 1,8)
-            cv.polylines(originalFrame, fishSkeleton, True, RED, 1,8)
-            cv.rectangle(originalFrame, (fx,fy),(fw+fx,fy+fh), RED, 1, 8,)
             cv.imshow('Video', originalFrame)
-            cv.waitKey(10)
+            # Abort if ESC button is pressed
+            if cv.waitKey(10) == 27:
+                vid.release()
+                cv.destroyAllWindows()
+                raise Exception("Process aborted by the user.")
 
         # Step5 -- Update the next frame
         fishContoursPrev = fishContours
@@ -137,6 +150,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     logging.info("Failed frames: " + str(failFrames) + "/" + str(totalFrames))
 
     return failFrames, contrast
+
 
 def getMovementBox(frame):
 
@@ -165,6 +179,7 @@ def getMovementBox(frame):
         (mx, my, mw, mh) = cv.boundingRect(joinedContours)
 
     return np.array([mx, my, mw, mh], int)
+
 
 def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
@@ -249,6 +264,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
 
     return totalFrames, contrast, np.array([mbx,mby,mbw,mbh], int)
 
+
 def getContrast(defaultContrast, frame):
 
     windowsName = "Choose Contrast"
@@ -272,6 +288,7 @@ def getContrast(defaultContrast, frame):
     cv.destroyAllWindows()
 
     return alpha/100
+
 
 def preprocess(frame, contrast, blur, threshold):
 
@@ -301,6 +318,7 @@ def preprocess(frame, contrast, blur, threshold):
     # cv.waitKey(1)
 
     return frame
+
 
 def getFishContours(frame, fAreaMin, fAreaMax):
 
@@ -336,6 +354,7 @@ def getFishContours(frame, fAreaMin, fAreaMax):
 
     return contours[iFishContour]
 
+
 def getFishSkeleton(frame):
 
     # Find the skeleton through Zhang-Suen thinning 
@@ -353,6 +372,7 @@ def getFishSkeleton(frame):
             iFishSkeleton = i
 
     return contours[iFishSkeleton]
+
 
 def checkFrame(fishSkeleton,fishContours, fishContoursPrev):
 
@@ -375,6 +395,21 @@ def checkFrame(fishSkeleton,fishContours, fishContoursPrev):
             return False
     
     return True
+
+
+def drawResults(frame, contours, skeleton, vidOut, validFrame=False):
+
+    # Contours rectangle
+    (fx, fy, fw, fh) = cv.boundingRect(contours)  
+
+    # Draw and Save the frame in file
+    cv.drawContours(frame, contours, -1, BLUE, 2)
+    cv.drawContours(frame, skeleton, -1, RED, 2)
+    cv.rectangle(frame, (fx,fy),(fw+fx,fy+fh), GREEN, 2, 8, 0)
+
+    if validFrame:
+        vidOut.write(frame)
+
 
 def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
 
