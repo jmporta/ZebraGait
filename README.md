@@ -57,9 +57,9 @@ Build an executable file from main scripts `KinematicsZebra_Tk.py` or `Kinematic
 
 ## TODO
 
-- Mean skeleton: if there is not a repeated x, no uniqueMean.
-- Add a check of the skeleton length.
-- Use h and w in the blob check instead of the area.
+- `treatData.py`: In the mean of the skeleton, if there is not a repeated x, no uniqueMean.
+- `swimTunnel.py`: Add a check of the skeleton length.
+- `swimTunnel.py`: Use h and w in the blob check instead of the area.
 
 ## Known bugs
 

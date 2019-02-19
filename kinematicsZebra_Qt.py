@@ -1,8 +1,8 @@
 # General libs
 import pathlib
 import logging
+import numpy as np
 import cv2 as cv
-import numpy as np 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 # Import matplotlib Agg buffer prepared to threading/embedding on tkinter
@@ -56,54 +56,52 @@ class MainWindow(QtWidgets.QMainWindow, kinematicsZebra_ui.Ui_KinematicsZebra):
 
     def run(self):
         
-        try:
-            self.progressBar.setMaximum(0)
-            self.RunButton.setEnabled(False)
-            self.vidPathTButton.setEnabled(False)
-            self.savePathTButton.setEnabled(False)
-            
-            # Obtain the GUI data
-            videoPath = self.vidPathLineEdit.text()
-            exportPath = self.savePathLineEdit.text()
-            expID = self.expIDLineEdit.text()
-            fps = int(self.fpsSpinBox.text())
-            
-            # Run the swimtunnel
-            self.progressLabel.setText("Processing the video...")
-            failedFrames, contrast = swimTunnel(videoPath, exportPath, expID, fps)
-            
-            self.progressLabel.setText("Computing the data...")
-            treatData(exportPath, expID, fps, contrast , failedFrames)
-
-            self.progressLabel.setText("DONE.")
-
-            self.checkDialog.setInformativeText("Find the results in "+ str(exportPath) +" folder.")
-            self.checkDialog.exec_()
-
-        except Exception as err:
-            self.progressBar.setMaximum(10)
-            self.progressLabel.setText("An error occurred, try again.")
-            QtWidgets.QMessageBox.critical(self, "Error", str(err))
-            self.progressLabel.setText("Ready")
-            self.RunButton.setEnabled(True)
-            self.vidPathTButton.setEnabled(True)
-            self.savePathTButton.setEnabled(True)
-            
-        else:
-            self.progressBar.setMaximum(10)
-            self.RunButton.setEnabled(True)
-            self.vidPathTButton.setEnabled(True)
-            self.savePathTButton.setEnabled(True)
-            self.progressLabel.setText("Ready")
+        self.enabledControls(False)
+        
+        # Obtain the GUI data
+        self.videoPath = self.vidPathLineEdit.text()
+        self.exportPath = self.savePathLineEdit.text()
+        self.expID = self.expIDLineEdit.text()
+        self.fps = int(self.fpsSpinBox.text())
+        
+        # Run the process in a thread
+        self.progressLabel.setText("Processing the video...")
+        self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps)
+        self.runProc.done.connect(self.done)
+        self.runProc.aborted.connect(self.aborted)
+        self.runProc.start()
    
+    def aborted(self, err):
+        self.progressLabel.setText("An error occurred, try again.")
+        QtWidgets.QMessageBox.critical(self, "Error", str(err))
+        self.enabledControls(True)
+
+    def done(self):
+        self.progressLabel.setText("Data extraction done.")
+        self.checkDialog.setInformativeText("Find the results in "+ str(self.exportPath) +" folder.")
+        self.checkDialog.exec_()
+        self.enabledControls(True)
+    
     def check(self):
         importPath = self.savePathLineEdit.text()
         expID = self.expIDLineEdit.text()
         time, beta, showVid = showData(importPath, expID, gui=True)
-
         self.cwindow = ShowWindow(time, beta, showVid)
         self.cwindow.show()
 
+    def enabledControls(self, status):
+        if status == True:
+            self.progressBar.setMaximum(10)
+            self.progressLabel.setText("Ready")
+        elif status == False:
+            self.progressBar.setMaximum(0)
+        self.RunButton.setEnabled(status)
+        self.vidPathTButton.setEnabled(status)
+        self.vidPathLineEdit.setEnabled(status)
+        self.savePathTButton.setEnabled(status)
+        self.savePathLineEdit.setEnabled(status)
+        self.expIDLineEdit.setEnabled(status)
+        self.fpsSpinBox.setEnabled(status)
 
 class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
     def __init__(self, time, beta, videoPathR, parent=None):
@@ -116,7 +114,7 @@ class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
         self.videoPathR = videoPathR
         self.vid = cv.VideoCapture(str(self.videoPathR))
         
-        if (not self.vid.isOpened()):
+        if not self.vid.isOpened():
             raise Exception("Could not open the video reference: " + videoPathR)
         
         # Get the number of video frames
@@ -179,6 +177,31 @@ class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
         # Draw the frame
         self.labelVid.setPixmap(pixmap.scaled(self.labelVid.size(), QtCore.Qt.KeepAspectRatio))
         
+
+class RunProcessThread(QtCore.QThread):
+
+    aborted = QtCore.pyqtSignal(str)
+    done = QtCore.pyqtSignal()
+
+    def __init__(self, videoPath, exportPath, expID, fps):
+        QtCore.QThread.__init__(self)
+        self.videoPath = videoPath
+        self.exportPath = exportPath
+        self.expID = expID
+        self.fps = fps
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        # Run the swimtunnel and the treat data
+        try:
+            failedFrames, contrast = swimTunnel(self.videoPath, self.exportPath, self.expID, self.fps)
+            treatData(self.exportPath, self.expID, self.fps, contrast , failedFrames)
+            self.done.emit()
+        except Exception as err:
+            self.aborted.emit(str(err))
+
 
 if __name__ == "__main__":
 

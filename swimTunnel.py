@@ -1,8 +1,9 @@
 import logging
 import pathlib
 
-import cv2 as cv
 import numpy as np
+import cv2 as cv
+
 
 import config
 
@@ -11,8 +12,6 @@ WHITE = (255, 255, 255)
 GREEN = (51, 153, 0)
 RED = (0, 0, 255)
 BLUE = (255, 153, 0)
-
-FRAME = []
 
 
 def swimTunnel(videoPath, exportPath, expID, fps):
@@ -54,9 +53,6 @@ def swimTunnel(videoPath, exportPath, expID, fps):
     # Read the first frame for second video walk
     _ret, frame = vid.read()
 
-    # TODO: DELETE
-    # OUTFRAME = cv.VideoWriter(str(pathlib.Path(exportPath,expID,expID + "BIG.avi")), codec, fps, (np.size(frame,0), np.size(frame,1)))
-
     # Second video loop to find the skeleton and its data
     logging.info("Extracting data...")
 
@@ -64,9 +60,6 @@ def swimTunnel(videoPath, exportPath, expID, fps):
         numFrame += 1
 
         # Step1 -- Initial crops/adds
-        
-        # TODO: DELETE
-        # FRAME = frame.copy()
 
         # Crop the main movement box
         frame = frame[mby:(mby+mbh), mbx:(mbx+mbw)]
@@ -95,20 +88,12 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             # Export and draw the Results
             exportResults(exportPath, expID, fishSkeleton, numFrame, validFrame=True)
             drawResults(originalFrame, fishContours, fishSkeleton, out, validFrame=True)
-            
-            # TODO: DELETE
-            # (fx, fy, fw, fh) = cv.boundingRect(fishContours) 
-            # cv.drawContours(FRAME, fishContours, -1, BLUE, 2, offset=(mbx-blankBorder,mby-blankBorder))
-            # cv.drawContours(FRAME, fishSkeleton, -1, RED, 2, offset=(mbx-blankBorder,mby-blankBorder))
-            # cv.rectangle(FRAME, (fx+mbx-blankBorder,fy+mby-blankBorder),(fw+fx+mbx-blankBorder,fy+mby+fh-blankBorder), GREEN, 2)
-            # cv.imshow("Frame",FRAME) 
-            # OUTFRAME.write(FRAME)
 
             # Reset consecutive failed frames counter
             consecFails = 0
 
             # DebugOnly: Show results
-            cv.imshow('Video', originalFrame)
+            cv.imshow("Kinematics Zebra", originalFrame)
             # Abort if ESC button is pressed
             if cv.waitKey(10) == 27:
                 vid.release()
@@ -131,7 +116,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             drawResults(originalFrame, fishContours, fishSkeleton, out, validFrame=False)
             
             # DebugOnly: Show results
-            cv.imshow('Video', originalFrame)
+            cv.imshow("Kinematics Zebra", originalFrame)
             # Abort if ESC button is pressed
             if cv.waitKey(10) == 27:
                 vid.release()
@@ -399,13 +384,13 @@ def checkFrame(fishSkeleton,fishContours, fishContoursPrev):
 
 def drawResults(frame, contours, skeleton, vidOut, validFrame=False):
 
-    # Contours rectangle
-    (fx, fy, fw, fh) = cv.boundingRect(contours)  
+    # # Contours rectangle
+    # (fx, fy, fw, fh) = cv.boundingRect(contours)
+    # cv.rectangle(frame, (fx,fy),(fw+fx,fy+fh), GREEN, 1, 8, 0)
 
     # Draw and Save the frame in file
-    cv.drawContours(frame, contours, -1, BLUE, 2)
-    cv.drawContours(frame, skeleton, -1, RED, 2)
-    cv.rectangle(frame, (fx,fy),(fw+fx,fy+fh), GREEN, 2, 8, 0)
+    cv.drawContours(frame, contours, -1, BLUE, 1)
+    cv.drawContours(frame, skeleton, -1, RED, 1)
 
     if validFrame:
         vidOut.write(frame)
@@ -432,6 +417,6 @@ if (__name__ == "__main__"):
     expID = "testID"
     exportPath = "./export/"
 
-    _failedFrames, _contrast = swimTunnel(videoPath, exportPath, expID, fps)    
+    _failedFrames, _contrast = swimTunnel(videoPath, exportPath, expID, fps)
     
     logging.info("DONE.")
