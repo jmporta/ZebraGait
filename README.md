@@ -35,7 +35,7 @@ Choose ONLY one of the below options to install all the required libraries:
     ```bash
     pip3 install -r requirements.txt
     ```
-## Build an executable
+## Build an executable (only with python-opencv)
 
 The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install libraries or python.
 
@@ -60,6 +60,7 @@ Build an executable file from main scripts `KinematicsZebra_Tk.py` or `Kinematic
 - `treatData.py`: In the mean of the skeleton, if there is not a repeated x, no uniqueMean.
 - `swimTunnel.py`: Add a check of the skeleton length.
 - `swimTunnel.py`: Use h and w in the blob check instead of the area.
+- `kinematicsZebra_Qt.py`: Create a loggerHandler and display the logs on a widget.
 
 ## Known bugs
 
