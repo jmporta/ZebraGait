@@ -136,7 +136,6 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     return failFrames, contrast
 
-
 def getMovementBox(frame):
 
     # Dilate one time the image for a better edges detection
@@ -186,7 +185,7 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
     _ret, backFrame = backVid.read()
 
     # Select the region of interest and the contrast
-    (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest",backFrame)
+    (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest", backFrame)
     cv.destroyAllWindows()
     if rh == 0 or rw == 0:
         raise Exception("The cropped region is empty.")

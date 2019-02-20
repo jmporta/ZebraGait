@@ -64,13 +64,23 @@ class MainWindow(QtWidgets.QMainWindow, kinematicsZebra_ui.Ui_KinematicsZebra):
         self.exportPath = self.savePathLineEdit.text()
         self.expID = self.expIDLineEdit.text()
         self.fps = int(self.fpsSpinBox.text())
-        
-        # Run the process in a thread
-        self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps)
-        self.runProc.done.connect(self.done)
-        self.runProc.msg.connect(self.sendmsg)
-        self.runProc.aborted.connect(self.aborted)
-        self.runProc.start()
+
+        # Run the process
+        try:
+            self.progressLabel.setText("Extracting the data...")
+            failedFrames, contrast = swimTunnel(self.videoPath, self.exportPath, self.expID, self.fps)
+            self.progressLabel.setText("Treating the data...")
+            treatData(self.exportPath, self.expID, self.fps, contrast , failedFrames)
+            self.done()
+        except Exception as err:
+            self.aborted(err) 
+
+        # # Run the process in a thread
+        # self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps)
+        # self.runProc.done.connect(self.done)
+        # self.runProc.msg.connect(self.sendmsg)
+        # self.runProc.aborted.connect(self.aborted)
+        # self.runProc.start()
    
     def aborted(self, err):
         self.progressLabel.setText("An error occurred, try again.")
@@ -78,7 +88,7 @@ class MainWindow(QtWidgets.QMainWindow, kinematicsZebra_ui.Ui_KinematicsZebra):
         self.enabledControls(True)
 
     def done(self):
-        self.progressLabel.setText("Data extraction done.")
+        self.progressLabel.setText("Done.")
         self.checkDialog.setInformativeText("Find the results in "+ str(self.exportPath) +" folder.")
         self.checkDialog.exec_()
         self.enabledControls(True)
@@ -203,12 +213,13 @@ class RunProcessThread(QtCore.QThread):
         # Run the swimtunnel and the treat data
         try:
             self.msg.emit("Extracting the data...")
-            failedFrames, contrast = swimTunnel(self.videoPath, self.exportPath, self.expID, self.fps)
+            self.failedFrames, self.contrast = swimTunnel(self.videoPath, self.exportPath, self.expID, self.fps)
             self.msg.emit("Treating data...")
-            treatData(self.exportPath, self.expID, self.fps, contrast , failedFrames)
+            treatData(self.exportPath, self.expID, self.fps, self.contrast , self.failedFrames)
             self.done.emit()
         except Exception as err:
             self.aborted.emit(str(err))
+        
 
 
 if __name__ == "__main__":
