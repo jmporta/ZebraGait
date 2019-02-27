@@ -129,6 +129,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     # Clean
     vid.release()
+    out.release()
     cv.destroyAllWindows()
 
     logging.info("Extraction DONE.")
