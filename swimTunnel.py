@@ -136,6 +136,7 @@ def swimTunnel(videoPath, exportPath, expID, fps, roi=()):
 
     return failFrames, contrast
 
+
 def getMovementBox(frame):
 
     # Dilate one time the image for a better edges detection

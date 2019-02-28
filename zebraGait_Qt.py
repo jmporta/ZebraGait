@@ -76,13 +76,16 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         #     self.aborted(err) 
 
         # Run the process in a thread
-        self.sendmsg("Select the ROI...")
-        self.roi = self.getRoi(self.videoPath)
-        self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps, self.roi)
-        self.runProc.done.connect(self.done)
-        self.runProc.msg.connect(self.sendmsg)
-        self.runProc.aborted.connect(self.aborted)
-        self.runProc.start()
+        try:
+            self.sendmsg("Select the ROI...")
+            self.roi = self.getRoi(self.videoPath)
+            self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps, self.roi)
+            self.runProc.done.connect(self.done)
+            self.runProc.msg.connect(self.sendmsg)
+            self.runProc.aborted.connect(self.aborted)
+            self.runProc.start()
+        except Exception as err:
+            self.aborted(err)
    
     def aborted(self, err):
         self.progressLabel.setText("An error occurred, try again.")
