@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'kinematicsZebra.ui'
+# Form implementation generated from reading ui file 'zebraGait.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.12
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_KinematicsZebra(object):
-    def setupUi(self, KinematicsZebra):
-        KinematicsZebra.setObjectName("KinematicsZebra")
-        KinematicsZebra.resize(580, 222)
-        KinematicsZebra.setMinimumSize(QtCore.QSize(580, 222))
-        KinematicsZebra.setMaximumSize(QtCore.QSize(580, 222))
+
+class Ui_zebraGait(object):
+    def setupUi(self, zebraGait):
+        zebraGait.setObjectName("zebraGait")
+        zebraGait.resize(580, 222)
+        zebraGait.setMinimumSize(QtCore.QSize(580, 222))
+        zebraGait.setMaximumSize(QtCore.QSize(580, 222))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/icons/gar-fish.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        KinematicsZebra.setWindowIcon(icon)
-        self.centralwidget = QtWidgets.QWidget(KinematicsZebra)
+        zebraGait.setWindowIcon(icon)
+        self.centralwidget = QtWidgets.QWidget(zebraGait)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(40, 30, 501, 134))
@@ -106,31 +107,30 @@ class Ui_KinematicsZebra(object):
         self.RunButton.setFlat(False)
         self.RunButton.setObjectName("RunButton")
         self.horizontalLayout.addWidget(self.RunButton)
-        KinematicsZebra.setCentralWidget(self.centralwidget)
+        zebraGait.setCentralWidget(self.centralwidget)
 
-        self.retranslateUi(KinematicsZebra)
-        QtCore.QMetaObject.connectSlotsByName(KinematicsZebra)
+        self.retranslateUi(zebraGait)
+        QtCore.QMetaObject.connectSlotsByName(zebraGait)
 
-    def retranslateUi(self, KinematicsZebra):
+    def retranslateUi(self, zebraGait):
         _translate = QtCore.QCoreApplication.translate
-        KinematicsZebra.setWindowTitle(_translate("KinematicsZebra", "Kinematics Zebra"))
-        self.vidPathLineEdit.setPlaceholderText(_translate("KinematicsZebra", "Select a video..."))
-        self.vidPathLabel.setText(_translate("KinematicsZebra", "Video Path:"))
-        self.savePathLabel.setText(_translate("KinematicsZebra", "Save Path:"))
-        self.expIDLabel.setText(_translate("KinematicsZebra", "Exp. ID:"))
-        self.savePathLineEdit.setPlaceholderText(_translate("KinematicsZebra", "Select a path..."))
-        self.vidPathTButton.setText(_translate("KinematicsZebra", "..."))
-        self.savePathTButton.setText(_translate("KinematicsZebra", "..."))
-        self.fpsLabel.setText(_translate("KinematicsZebra", "fps:"))
-        self.progressLabel.setText(_translate("KinematicsZebra", "Ready"))
-        self.RunButton.setText(_translate("KinematicsZebra", "Run"))
+        zebraGait.setWindowTitle(_translate("zebraGait", "Zebra Gait"))
+        self.vidPathLineEdit.setPlaceholderText(_translate("zebraGait", "Select a video..."))
+        self.vidPathLabel.setText(_translate("zebraGait", "Video Path:"))
+        self.savePathLabel.setText(_translate("zebraGait", "Save Path:"))
+        self.expIDLabel.setText(_translate("zebraGait", "Exp. ID:"))
+        self.savePathLineEdit.setPlaceholderText(_translate("zebraGait", "Select a path..."))
+        self.vidPathTButton.setText(_translate("zebraGait", "..."))
+        self.savePathTButton.setText(_translate("zebraGait", "..."))
+        self.fpsLabel.setText(_translate("zebraGait", "fps:"))
+        self.progressLabel.setText(_translate("zebraGait", "Ready"))
+        self.RunButton.setText(_translate("zebraGait", "Run"))
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    KinematicsZebra = QtWidgets.QMainWindow()
-    ui = Ui_KinematicsZebra()
-    ui.setupUi(KinematicsZebra)
-    KinematicsZebra.show()
+    zebraGait = QtWidgets.QMainWindow()
+    ui = Ui_zebraGait()
+    ui.setupUi(zebraGait)
+    zebraGait.show()
     sys.exit(app.exec_())
-

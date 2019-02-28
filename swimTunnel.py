@@ -4,7 +4,6 @@ import pathlib
 import numpy as np
 import cv2 as cv
 
-
 import config
 
 # Colors
@@ -14,7 +13,7 @@ RED = (0, 0, 255)
 BLUE = (255, 153, 0)
 
 
-def swimTunnel(videoPath, exportPath, expID, fps):
+def swimTunnel(videoPath, exportPath, expID, fps, roi=()):
 
     # Init. Data
     defaultContrast = config.DEFAULT_CONTRAST
@@ -44,7 +43,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
 
     # First video loop. Define a smaller image movement subset and crop it. Choose the ROI and the contrast.
     # The crop region is bigger than the main box. The main box is only to verify the location of the correct blob and to save computations in each step.
-    totalFrames, contrast, (mbx, mby, mbw, mbh) = getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax)
+    totalFrames, contrast, (mbx, mby, mbw, mbh) = getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax, roi)
 
     # Open the save video object
     codec = cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
@@ -93,7 +92,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             consecFails = 0
 
             # DebugOnly: Show results
-            cv.imshow("Kinematics Zebra", originalFrame)
+            cv.imshow("Zebra Gait", originalFrame)
             # Abort if ESC button is pressed
             if cv.waitKey(10) == 27:
                 vid.release()
@@ -116,7 +115,7 @@ def swimTunnel(videoPath, exportPath, expID, fps):
             drawResults(originalFrame, fishContours, fishSkeleton, out, validFrame=False)
             
             # DebugOnly: Show results
-            cv.imshow("Kinematics Zebra", originalFrame)
+            cv.imshow("Zebra Gait", originalFrame)
             # Abort if ESC button is pressed
             if cv.waitKey(10) == 27:
                 vid.release()
@@ -166,7 +165,7 @@ def getMovementBox(frame):
     return np.array([mx, my, mw, mh], int)
 
 
-def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
+def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax, roi):
 
     totalFrames = 0
     layer = 10 # secure layer/border in pixels
@@ -186,8 +185,12 @@ def getMainBox(videoPath, defaultContrast, bAreaMin, bAreaMax):
     _ret, backFrame = backVid.read()
 
     # Select the region of interest and the contrast
-    (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest", backFrame)
-    cv.destroyAllWindows()
+    if roi == ():
+        (rx, ry, rw, rh) = cv.selectROI("Crop the region of interest", backFrame)
+        cv.destroyAllWindows()
+    else:
+        (rx, ry, rw, rh) = (roi[0], roi[1], roi[2], roi[3])
+
     if rh == 0 or rw == 0:
         raise Exception("The cropped region is empty.")
     contrast = getContrast(defaultContrast, backFrame[ry:(ry+rh), rx:(rx+rw)])
@@ -404,6 +407,7 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
     else:
         # Write an empty file if the frame is failed
         np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), 0)
+
 
 if (__name__ == "__main__"):
 

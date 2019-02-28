@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KinematicsZebra</class>
- <widget class="QMainWindow" name="KinematicsZebra">
+ <class>zebraGait</class>
+ <widget class="QMainWindow" name="zebraGait">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Kinematics Zebra</string>
+   <string>Zebra Gait</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
