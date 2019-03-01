@@ -53,7 +53,7 @@ Choose ONLY one of the below options to install all the required libraries:
     ```
 ## Build an executable (only with python-opencv)
 
-The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install libraries or python.
+The executable files built with [PyInstaller](http://www.pyinstaller.org/) work without install extra libraries or python.
 
 Build an executable file from main scripts `zebraGait_Tk.py` or `zebraGait_Qt.py` with PyInstaller, following the steps below:
 
@@ -63,13 +63,18 @@ Build an executable file from main scripts `zebraGait_Tk.py` or `zebraGait_Qt.py
    pip3 install pyinstaller
    ```
 
-2. Edit `build.sh` under Gnu/Linux or `build.bat` under Windows, specifying the main script and the desired options.
-   
-    In Windows, we must add the location of ffmpeg dll, editing the above line in `build.bat`:
+2. Optional: Edit `build.sh` under Gnu/Linux or `build.cmd` under Windows, specifying the desired options.
+
+3. Run the `build.sh` or `build.cmd` script:
+
     ```bash
-    --add-binary "<PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION_ARCH>.dll;."
+    $ ./build.sh <script.py>
     ```
-3. Run the `build.sh` or `build.bat` script.
+    In Windows, we must specify the location of ffmpeg libraries as an argument:
+    ```bash
+    > .\build.cmd <script.py> <PATH_TO_PYTHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION>.dll
+    ```
+
 
 ## TODO
 
