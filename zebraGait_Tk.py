@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 # Import own libs
-import config
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
@@ -131,6 +130,17 @@ class mainWindow:
             fps = int(self.txtVidFps.get())
             exportPath = self.txtSavePath.get()
             if ((fps > 0) and (fps < 1001)):
+                # Check/Create paths
+                pathlib.Path(exportPath, expID, "logs").mkdir(parents=True, exist_ok=True)
+                # Logs configuration in console/file
+                logging.basicConfig(
+                    level=logging.INFO,
+                    format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
+                    datefmt="%m/%d/%Y %H:%M:%S",
+                    handlers=[logging.FileHandler(pathlib.Path(exportPath, expID, "logs", "log_file.log")),
+                            logging.StreamHandler()]
+                )
+
                 # Run computations
                 self.lblStatus.config(text = "Processing the video...")
                 failedFrames, contrast = swimTunnel(videoPath, exportPath, expID, fps)
@@ -300,18 +310,6 @@ class showWindow:
         self.canvasVid.itemconfig(self.canvasVidArea,image=self.photo)
 
 if __name__ == "__main__":
-
-    # Check/Create paths
-    pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
-
-    # Logs configuration in console/file
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
-        datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.FileHandler(pathlib.Path(config.LOGS_PATH, "log_file.log")),
-                  logging.StreamHandler()]
-    )
 
     # Run gui and wait
     mainWin = tk.Tk()

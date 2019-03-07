@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 
 # Import project libs
-import config
 from swimTunnel import swimTunnel
 from treatData import treatData
 from showData import showData
@@ -55,15 +54,22 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         self.iniSavePath = str(pathlib.Path(savePath)) # remember the last opened path
 
     def run(self):
-        
-        # Block Controls
-        self.enabledControls(False)
-        
-        # Obtain the GUI data
-        self.videoPath = self.vidPathLineEdit.text()
-        self.exportPath = self.savePathLineEdit.text()
-        self.expID = self.expIDLineEdit.text()
-        self.fps = int(self.fpsSpinBox.text())
+
+        try:
+            # Block Controls
+            self.enabledControls(False)
+            
+            # Obtain the GUI data
+            self.videoPath = self.vidPathLineEdit.text()
+            self.exportPath = self.savePathLineEdit.text()
+            self.expID = self.expIDLineEdit.text()
+            self.fps = int(self.fpsSpinBox.text())
+
+            # Init. logs
+            self.initLogs(self.exportPath, self.expID)
+            
+        except Exception as err:
+            self.aborted(err)
 
         # # Run the process without threads
         # try:
@@ -75,8 +81,8 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         # except Exception as err:
         #     self.aborted(err) 
 
-        # Run the process in a thread
         try:
+            # Run the process in a thread
             self.sendmsg("Select the ROI...")
             self.roi = self.getRoi(self.videoPath)
             self.runProc = RunProcessThread(self.videoPath, self.exportPath, self.expID, self.fps, self.roi)
@@ -136,6 +142,17 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
 
         return (rx, ry, rw, rh)
 
+    def initLogs(self, exportPath, expID):
+        # Check/Create paths
+        pathlib.Path(exportPath, expID, "logs").mkdir(parents=True, exist_ok=True)
+        # Logs configuration in console/file
+        logging.basicConfig(
+            level=logging.INFO,
+            format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
+            datefmt="%m/%d/%Y %H:%M:%S",
+            handlers=[logging.FileHandler(pathlib.Path(exportPath, expID, "logs", "log_file.log")),
+                    logging.StreamHandler()]
+        )
 
 class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
     def __init__(self, time, beta, videoPathR, parent=None):
@@ -242,18 +259,6 @@ class RunProcessThread(QtCore.QThread):
 
 
 if __name__ == "__main__":
-
-    # Check/Create paths
-    pathlib.Path(config.LOGS_PATH).mkdir(parents=True, exist_ok=True)
-
-    # Logs configuration in console/file
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s] %(levelname)s: %(message)s (%(funcName)s:%(lineno)d)",
-        datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.FileHandler(pathlib.Path(config.LOGS_PATH, "log_file.log")),
-                  logging.StreamHandler()]
-    )
 
     app = QtWidgets.QApplication([])
     window = MainWindow()

@@ -1,4 +1,6 @@
 @echo OFF
+::RUN IN A WINDOWS POWERSHELL!
+
 
 :: lib = <PATH_TO_PYtHON>\Lib\site-packages\cv2\opencv_ffmpeg<VERSION>.dll
 set lib=%2
