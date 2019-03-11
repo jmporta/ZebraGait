@@ -1,7 +1,3 @@
-# GLOBAL VARIABLES
-
-LOGS_PATH = "./logs/"  # Path to save the log files
-
 # Extraction Variables
 
 DEFAULT_CONTRAST = 1.00 # Default value of the contrast in [0.,3.]
