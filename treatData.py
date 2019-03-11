@@ -48,6 +48,7 @@ def treatData(exportPath, expID, fps, contrast, failedFrames):
 
     logging.info("Treatment DONE.")
 
+
 def importData(filePath, expID, proportionJoint, proportionTorsion, nFiles):
 
     # Init. the main arrays
@@ -66,7 +67,7 @@ def importData(filePath, expID, proportionJoint, proportionTorsion, nFiles):
     for i in range(nFiles):
 
         # Load skeleton from a numpy binary array file *.npy
-        skeleton = np.load(pathlib.Path(filePath,expID,"skeleton",expID + "_" + str(i+1) + ".npy"))
+        skeleton = np.load(pathlib.Path(filePath, expID, "skeleton", expID + "_" + str(i+1) + ".npy"))
         
         if not np.array_equal(skeleton, 0):
             # Data pre-treatment
@@ -102,6 +103,7 @@ def importData(filePath, expID, proportionJoint, proportionTorsion, nFiles):
             
     return ind, tailP, headP, jointP, validInd, torsionP
 
+
 def uniqueMean(skeleton):
 
     skmean = np.array([], int).reshape(0,2)
@@ -120,6 +122,7 @@ def uniqueMean(skeleton):
             skmean = np.vstack([skmean,[skeleton[i,0], skeleton[i,1]]])
 
     return skmean
+
 
 def computeAngle(A, B, C, nValidFrames):
 
@@ -144,6 +147,7 @@ def computeAngle(A, B, C, nValidFrames):
 
     return alpha, ampl
 
+
 def lenSK(skeleton, proportion):
     # Compute the length of the skeleton
     skeletonLen = 0
@@ -159,6 +163,7 @@ def lenSK(skeleton, proportion):
             break
 
     return skeletonLen, point
+
 
 def angleData(time, angle):
 
@@ -187,7 +192,7 @@ def angleData(time, angle):
     relativeP = []
     noiseP = []
 
-    if (rootsd[0] >= x[0]): # first root
+    if rootsd[0] >= x[0]:  # first root
         if (np.abs(rootsd[0]-rootsd[1]) > noiseHDist) or (np.abs(cs(rootsd[0])-cs(rootsd[1])) > noiseVDist):
             # Append valid root
             relativeP.append(rootsd[0])
@@ -195,7 +200,7 @@ def angleData(time, angle):
             # Save noise
             noiseP.append(rootsd[0])
 
-    for i in range(1,len(rootsd)-1): # mid roots
+    for i in range(1, len(rootsd)-1):  # mid roots
             if (np.abs(rootsd[i]-rootsd[i+1]) > noiseHDist) or (np.abs(cs(rootsd[0])-cs(rootsd[1])) > noiseVDist):
                 if (len(noiseP) == 0 ): 
                     # Append valid root
@@ -210,8 +215,8 @@ def angleData(time, angle):
                 # Save noise
                 noiseP.append(rootsd[i])
 
-    if (rootsd[-1] <= x[-1]) : # last root
-        if (len(noiseP) == 0 ): 
+    if rootsd[-1] <= x[-1]:  # last root
+        if len(noiseP) == 0:
             # Append valid root
             relativeP.append(rootsd[-1])
         else:
@@ -221,7 +226,7 @@ def angleData(time, angle):
 
     # Compute mean data
     amp = np.zeros(len(relativeP)-1, float)
-    for i in range(1,len(relativeP)):
+    for i in range(1, len(relativeP)):
         amp[i-1] = np.abs(cs(relativeP[i])-cs(relativeP[i-1]))/2
     
     meanAmp = np.mean(amp)
@@ -240,6 +245,7 @@ def angleData(time, angle):
     # plt.show()
 
     return meanAmp, freq
+
 
 def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, exportPath, expID, nValidFrames, fps, contrast, failedFrames):
 
@@ -262,8 +268,6 @@ def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, 
         w.writerow(["Contrast", "Fps", "Failed Frames"])
         w.writerow([contrast, fps, failedFrames])
 
-
-
     # Export the data in npy files to show faster in showData
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_time"), time)
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_alpha"), alpha)
@@ -271,7 +275,7 @@ def exportData(time, headP, jointP, torsionP, tailP, alpha, beta, gamma, aData, 
     np.save(pathlib.Path(exportPath, expID, "data", expID + "_gamma"), gamma)
 
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
 
     logging.basicConfig(
         level=logging.INFO,

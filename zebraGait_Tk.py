@@ -21,7 +21,7 @@ from treatData import treatData
 from showData import showData
 
 
-class mainWindow:
+class MainWindow:
     
     # MASONRY
 
@@ -54,41 +54,41 @@ class mainWindow:
         self.mainFrame.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
 
         # Video open path
-        self.lblPath =  tk.Label(self.mainFrame, text="Video path:")
+        self.lblPath = tk.Label(self.mainFrame, text="Video path:")
         self.lblPath.grid(column=0, row=0, sticky=tk.W, padx=10, pady=5)
 
         self.defaultPath = tk.StringVar(self.mainFrame, value=self.defaultVid)
-        self.txtPath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
+        self.txtPath = tk.Entry(self.mainFrame, width=35, textvariable=self.defaultPath)
         self.txtPath.grid(column=1, row=0, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
-        self.btnPath =  tk.Button(self.mainFrame, text="...", command=self.clickPath)
+        self.btnPath = tk.Button(self.mainFrame, text="...", command=self.clickPath)
         self.btnPath.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
 
         # Export string name
-        self.lblVidId =  tk.Label(self.mainFrame, text="ExperimentID:")
+        self.lblVidId = tk.Label(self.mainFrame, text="ExperimentID:")
         self.lblVidId.grid(column=0, row=1, sticky=tk.W, padx=10, pady=5)
 
         self.defaultID = tk.StringVar(self.mainFrame, value=self.defaultName)
-        self.txtVidId =  tk.Entry(self.mainFrame, textvariable=self.defaultID, state="disable")
+        self.txtVidId = tk.Entry(self.mainFrame, textvariable=self.defaultID, state="disable")
         self.txtVidId.grid(column=1, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
         # Export fps integer
-        self.lblVidFps =  tk.Label(self.mainFrame, text="Video Fps:")
+        self.lblVidFps = tk.Label(self.mainFrame, text="Video Fps:")
         self.lblVidFps.grid(column=2, row=1, sticky=tk.W, padx=5, pady=5)
 
         self.defaultFps = tk.StringVar(self.mainFrame, value=self.defaultFrames)
-        self.txtVidFps =  tk.Entry(self.mainFrame, width=5, textvariable=self.defaultFps)
+        self.txtVidFps = tk.Entry(self.mainFrame, width=5, textvariable=self.defaultFps)
         self.txtVidFps.grid(column=3, row=1, sticky=(tk.W, tk.E), padx=5, pady=5)
 
         # Video open path
-        self.lblSavePath =  tk.Label(self.mainFrame, text="Save path:")
+        self.lblSavePath = tk.Label(self.mainFrame, text="Save path:")
         self.lblSavePath.grid(column=0, row=2, sticky=tk.W, padx=10, pady=5)
 
         self.defaultSavePath = tk.StringVar(self.mainFrame, value=self.defaultSaveVid)
-        self.txtSavePath =  tk.Entry(self.mainFrame, width=35, textvariable=self.defaultSavePath)
+        self.txtSavePath = tk.Entry(self.mainFrame, width=35, textvariable=self.defaultSavePath)
         self.txtSavePath.grid(column=1, row=2, sticky=(tk.W, tk.E), padx=5, pady=5, columnspan=3)
 
-        self.btnSavePath =  tk.Button(self.mainFrame, text="...", command=self.clickSavePath)
+        self.btnSavePath = tk.Button(self.mainFrame, text="...", command=self.clickSavePath)
         self.btnSavePath.grid(column=4, row=2, sticky=tk.W, padx=5, pady=5)
 
         # RUN FRAME
@@ -106,11 +106,11 @@ class mainWindow:
         self.lblStatus.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 
         # Run button
-        self.btnRun =  tk.Button(self.btnFrame, text="Run", width=5, command=self.clickRun)
+        self.btnRun = tk.Button(self.btnFrame, text="Run", width=5, command=self.clickRun)
         self.btnRun.grid(column=4, row=0, sticky=tk.E, padx=5, pady=5)
 
         # Show button.
-        self.btnShow =  tk.Button(self.btnFrame, text="Show", width=5, command=self.clickShow, state="disable")
+        self.btnShow = tk.Button(self.btnFrame, text="Show", width=5, command=self.clickShow, state="disable")
         self.btnShow.grid(column=3, row=0, sticky=tk.E, padx=5, pady=5)
 
         # List of buttons to threading
@@ -129,7 +129,7 @@ class mainWindow:
                 raise Exception("Select a video before running the extraction.")
             fps = int(self.txtVidFps.get())
             exportPath = self.txtSavePath.get()
-            if ((fps > 0) and (fps < 1001)):
+            if (fps > 0) and (fps < 1001):
                 # Check/Create paths
                 pathlib.Path(exportPath, expID, "logs").mkdir(parents=True, exist_ok=True)
                 # Logs configuration in console/file
@@ -154,7 +154,7 @@ class mainWindow:
             self.lblStatus.config(text="Ready")
             self.btnShow.configure(state="disable")
         else:
-            tk.messagebox.showinfo("Info", "The video has been processed. Find the results in "+ str(exportPath) +" folder.")
+            tk.messagebox.showinfo("Info", "The video has been processed. Find the results in " + str(exportPath) + " folder.")
             logging.info("The video has been processed.")
             self.lblStatus.config(text="Done. Check the results or select a new video.")
             self.btnShow.configure(state="normal")
@@ -168,7 +168,7 @@ class mainWindow:
 
             # New Window
             showWin = tk.Toplevel(self.master)
-            showWindow(showWin, time, beta, videoPathR)
+            ShowWindow(showWin, time, beta, videoPathR)
         except Exception as err:
             tk.messagebox.showerror("Error", err)
             logging.error(err)
@@ -222,7 +222,7 @@ class mainWindow:
         for btn in self.buttons:
             btn["state"] = "normal"
 
-class showWindow:
+class ShowWindow:
 
     # MASONRY
 
@@ -234,9 +234,6 @@ class showWindow:
         self.master = master
         self.master.title("Plots and data")
         self.master.resizable(width=False, height=False)
-        # Icon
-        self.img = tk.PhotoImage(file=pathlib.Path("./icons/gar-fish.png"))
-        self.master.tk.call("wm", "iconphoto", self.master._w, self.img)
 
         # VID
 
@@ -244,7 +241,7 @@ class showWindow:
         self.videoPathR = videoPathR
         self.vid = cv.VideoCapture(str(self.videoPathR))
         
-        if (not self.vid.isOpened()):
+        if not self.vid.isOpened():
             raise Exception("Could not open the video reference: " + videoPathR)
         
         # get the number of video frames
@@ -264,8 +261,8 @@ class showWindow:
 
         # Draw the first frame
         self.frame = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB) # change BGR(openCV) to RGB(tkinter)
-        self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame)) # use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
-        self.canvasVidArea = self.canvasVid.create_image(0, 0, image=self.photo, anchor=tk.NW) # add a PhotoImage to the Canvas
+        self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame))  # use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
+        self.canvasVidArea = self.canvasVid.create_image(0, 0, image=self.photo, anchor=tk.NW)  # add a PhotoImage to the Canvas
     
         # FIG
 
@@ -295,12 +292,12 @@ class showWindow:
         self.updateFrame(int(value))
         self.updatePoint(int(value))
         
-    def updatePoint(self,val):
+    def updatePoint(self, val):
         self.pointDraw.set_xdata(self.x[val-1])
         self.pointDraw.set_ydata(self.beta[val-1])
         self.canvasPlot.draw_idle()
    
-    def updateFrame(self,val):
+    def updateFrame(self, val):
         # Set a frame
         self.vid.set(cv.CAP_PROP_POS_FRAMES, val)
         _, self.frame = self.vid.read()
@@ -309,10 +306,11 @@ class showWindow:
         self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.frame))
         self.canvasVid.itemconfig(self.canvasVidArea,image=self.photo)
 
+
 if __name__ == "__main__":
 
     # Run gui and wait
     mainWin = tk.Tk()
-    mainWindow(mainWin)
+    MainWindow(mainWin)
     mainWin.mainloop()
-    
+

@@ -21,7 +21,7 @@ clean() {
 }
 
 # main
-if [ "$arg" != "clean" ]
+if [[ "$arg" != "clean" ]]
 then
     build_onefile
     clean

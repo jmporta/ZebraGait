@@ -2,7 +2,6 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-import config
 
 def showData(exportPath, expID, gui=False):
 
@@ -15,6 +14,7 @@ def showData(exportPath, expID, gui=False):
     else:
         plotGraphs(time, beta)
 
+
 def importMesures(dataPath, expID):
 
     # Import all the data in npy files
@@ -23,8 +23,8 @@ def importMesures(dataPath, expID):
 
     return ind, beta
 
-def plotGraphs(time, beta):
 
+def plotGraphs(time, beta):
 
     # Plot the Tail-Angle beta
     plt.figure(1)
@@ -37,7 +37,8 @@ def plotGraphs(time, beta):
     # Show Plots
     plt.show()
 
-if (__name__ == "__main__"):
+
+if __name__ == "__main__":
 
     exportPath = "./export/"
     expID = "testID"

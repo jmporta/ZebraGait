@@ -17,6 +17,7 @@ from treatData import treatData
 from showData import showData
 from models import zebraGait_ui, showWindow_ui, resources_rc
 
+
 class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -43,7 +44,7 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         self.checkButton.clicked.connect(self.check)
    
     def selectVidPath(self):
-        vidPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file",  self.iniPath ,"Video files (*.avi *.mpg)")
+        vidPath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file",  self.iniPath, "Video files (*.avi *.mpg)")
         self.vidPathLineEdit.setText(vidPath)
         self.expIDLineEdit.setText(pathlib.Path(vidPath).stem)
         self.iniPath = str(pathlib.Path(vidPath).parent) # remember the last opened path
@@ -100,7 +101,7 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
 
     def done(self):
         self.progressLabel.setText("Done.")
-        self.checkDialog.setInformativeText("Find the results in "+ str(self.exportPath) +" folder.")
+        self.checkDialog.setInformativeText("Find the results in "+ str(self.exportPath) + " folder.")
         self.checkDialog.exec_()
         self.enabledControls(True)
     
@@ -115,10 +116,10 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         self.cwindow.show()
 
     def enabledControls(self, status):
-        if status == True:
+        if status:
             self.progressBar.setMaximum(10)
             self.progressLabel.setText("Ready")
-        elif status == False:
+        elif not status:
             self.progressBar.setMaximum(0)
         self.RunButton.setEnabled(status)
         self.vidPathTButton.setEnabled(status)
@@ -140,7 +141,7 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
         cv.destroyAllWindows()
         vid.release()
 
-        return (rx, ry, rw, rh)
+        return rx, ry, rw, rh
 
     def initLogs(self, exportPath, expID):
         # Check/Create paths
@@ -153,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow, zebraGait_ui.Ui_zebraGait):
             handlers=[logging.FileHandler(pathlib.Path(exportPath, expID, "logs", "log_file.log")),
                     logging.StreamHandler()]
         )
+
 
 class ShowWindow(QtWidgets.QMainWindow, showWindow_ui.Ui_showWindow):
     def __init__(self, time, beta, videoPathR, parent=None):

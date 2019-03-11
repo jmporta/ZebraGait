@@ -300,8 +300,7 @@ def preprocess(frame, contrast, blur, threshold):
         element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*morphSize+1, 2*morphSize+1), (morphSize, morphSize))
         frame = cv.morphologyEx(frame, cv.MORPH_DILATE, element, iterations=2)
         frame = cv.morphologyEx(frame, cv.MORPH_CLOSE, element, iterations=2) 
-        
-        
+
     # # DebugOnly: Show preprocess image
     # cv.imshow("PreProcess",frame)
     # cv.waitKey(1)
@@ -365,14 +364,14 @@ def getFishSkeleton(frame):
 
 def checkFrame(fishSkeleton,fishContours, fishContoursPrev):
 
-     # Check the ressemblance of the blob detected fish shape in the previous frame
+    # Check the ressemblance of the blob detected fish shape in the previous frame
     if cv.matchShapes(fishContours, fishContoursPrev, 3, 0.0) > 0.1:
         return False
 
     # Check if the fish rect. boundary contains the fish skeleton
     (fx, fy, fw, fh) = cv.boundingRect(fishContours)
     for i in range(np.size(fishSkeleton, 0)):
-        if (not ((fx < fishSkeleton[i][0, 0] < (fx+fw)) and (fy < fishSkeleton[i][0, 1] < (fy+fh)))):
+        if not ((fx < fishSkeleton[i][0, 0] < (fx+fw)) and (fy < fishSkeleton[i][0, 1] < (fy+fh))):
             return False
     
     # Check if the skeleton contains branches
@@ -410,7 +409,7 @@ def exportResults(dataPath, expID, fishSkeleton, step, validFrame):
         np.save(pathlib.Path(dataPath, expID, "skeleton", expID + "_" + str(step)), 0)
 
 
-if (__name__ == "__main__"):
+if __name__ == "__main__":
 
     logging.basicConfig(
         level=logging.INFO,
